@@ -4,8 +4,8 @@ import { ProgressBar } from "@/components/survey/ProgressBar";
 import { CategoryQuestion } from "@/components/survey/CategoryQuestion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+
 import { Label } from "@/components/ui/label";
 import { useSurveyState } from "@/hooks/useSurveyState";
 import { VENDOR_CATEGORIES, ADDITIONAL_CATEGORIES, CategoryResponse } from "@/utils/surveyData";
@@ -35,18 +35,9 @@ const Survey = () => {
   const [vendorTexts, setVendorTexts] = useState<Record<string, string>>(() => {
     const texts: Record<string, string> = {};
     Object.entries(draft.additional_vendors).forEach(([key, vendors]) => {
-      texts[key] = vendors.join("\n");
+      texts[key] = vendors.length > 0 ? vendors[0] : "";
     });
     return texts;
-  });
-  
-  // State for tracking which additional categories have vendor recommendations
-  const [vendorCheckboxes, setVendorCheckboxes] = useState<Record<string, boolean>>(() => {
-    const checkboxes: Record<string, boolean> = {};
-    Object.entries(draft.additional_vendors).forEach(([key, vendors]) => {
-      checkboxes[key] = vendors.length > 0;
-    });
-    return checkboxes;
   });
 
   // Fixed total steps: 1 (contact) + 7 (main categories) + 1 (additional selection) + 1 (vendor recommendations)
@@ -303,18 +294,9 @@ const Survey = () => {
       // Save vendor recommendations for all selected categories
       selectedAdditional.forEach((category) => {
         const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+        const vendorName = (vendorTexts[categoryKey] || "").trim();
         
-        if (vendorCheckboxes[categoryKey]) {
-          // Parse textarea content for checked categories
-          const vendors = (vendorTexts[categoryKey] || "")
-            .split(/[\n,]+/)
-            .map((v) => v.trim())
-            .filter(Boolean);
-          updateAdditionalVendors(categoryKey, vendors);
-        } else {
-          // Save empty array for unchecked categories
-          updateAdditionalVendors(categoryKey, []);
-        }
+        updateAdditionalVendors(categoryKey, vendorName ? [vendorName] : []);
       });
       
       submitSurvey();
@@ -330,10 +312,6 @@ const Survey = () => {
       
       submitSurvey();
       navigate("/thank-you");
-    };
-    
-    const handleCheckboxChange = (categoryKey: string, checked: boolean) => {
-      setVendorCheckboxes(prev => ({ ...prev, [categoryKey]: checked }));
     };
     
     const handleTextChange = (categoryKey: string, text: string) => {
@@ -358,38 +336,29 @@ const Survey = () => {
               Do you know any great vendors for these services? 🌟
             </h2>
             <p className="text-lg text-muted-foreground">
-              Check the box for any service where you can recommend vendors
+              Enter a vendor name for any service you can recommend (optional)
             </p>
           </div>
 
-          <div className="max-w-xl mx-auto space-y-6">
+          <div className="max-w-2xl mx-auto space-y-4">
             {selectedAdditional.map((category) => {
               const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-              const isChecked = vendorCheckboxes[categoryKey] || false;
               const textValue = vendorTexts[categoryKey] || "";
               
               return (
-                <div key={category} className="p-6 rounded-lg border border-border bg-card">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <Checkbox
-                      id={`vendor-${categoryKey}`}
-                      checked={isChecked}
-                      onCheckedChange={(checked) => handleCheckboxChange(categoryKey, !!checked)}
-                    />
-                    <Label 
-                      htmlFor={`vendor-${categoryKey}`} 
-                      className="text-lg font-medium cursor-pointer flex-1"
-                    >
-                      {category}
-                    </Label>
-                  </div>
-                  
-                  <Textarea
-                    placeholder="Enter vendor names - one per line or separated by commas"
+                <div key={category} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg border border-border bg-card">
+                  <Label 
+                    htmlFor={`vendor-${categoryKey}`} 
+                    className="text-base font-medium sm:w-1/3 flex-shrink-0"
+                  >
+                    {category}
+                  </Label>
+                  <Input
+                    id={`vendor-${categoryKey}`}
+                    placeholder="Vendor name"
                     value={textValue}
                     onChange={(e) => handleTextChange(categoryKey, e.target.value)}
-                    disabled={!isChecked}
-                    className="min-h-[100px] text-base"
+                    className="h-12 text-base flex-1"
                   />
                 </div>
               );
