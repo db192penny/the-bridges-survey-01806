@@ -377,9 +377,14 @@ const Admin = () => {
                               {Object.keys(response.additional_vendors).length > 0 && (
                                 <div className="pt-2 border-t">
                                   <strong>Additional Vendors:</strong>{" "}
-                                  {Object.entries(response.additional_vendors)
-                                    .filter(([, vendors]) => vendors.length > 0 && vendors[0])
-                                    .map(([cat, vendors]) => `${cat}: ${vendors.join(", ")}`)
+                                  {response.additional_categories_requested
+                                    .map((categoryName) => {
+                                      const categoryKey = categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+                                      const vendors = response.additional_vendors[categoryKey] || [];
+                                      const vendorNames = vendors.filter(Boolean).join(", ");
+                                      return vendorNames ? `${categoryName}: ${vendorNames}` : null;
+                                    })
+                                    .filter(Boolean)
                                     .join(" | ") || "None provided"}
                                 </div>
                               )}

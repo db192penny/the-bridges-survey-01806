@@ -30,6 +30,18 @@ export function generateMainCSV(responses: SurveyResponse[]): string {
 
   const rows = responses.map((response) => {
     const r = response.responses;
+    
+    // Build readable additional vendors summary by matching keys back to category names
+    const additionalVendorsSummary = response.additional_categories_requested
+      .map((categoryName) => {
+        const categoryKey = categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+        const vendors = response.additional_vendors[categoryKey] || [];
+        const vendorNames = vendors.filter(Boolean).join(", ");
+        return vendorNames ? `${categoryName}: ${vendorNames}` : null;
+      })
+      .filter(Boolean)
+      .join(" | ");
+    
     return [
       new Date(response.timestamp).toLocaleString(),
       response.name || "",
@@ -52,9 +64,7 @@ export function generateMainCSV(responses: SurveyResponse[]): string {
       r.cleaning?.vendors.join("; ") || "",
       r.cleaning?.skip_reason || "",
       response.additional_categories_requested.join("; "),
-      Object.entries(response.additional_vendors)
-        .map(([cat, vendors]) => `${cat}: ${vendors.join(", ")}`)
-        .join(" | "),
+      additionalVendorsSummary,
     ];
   });
 

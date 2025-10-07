@@ -297,6 +297,13 @@ const Survey = () => {
         const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
         const vendorName = (vendorTexts[categoryKey] || "").trim();
         
+        console.log('Saving additional vendor:', {
+          category,
+          categoryKey,
+          vendorName,
+          vendorTexts
+        });
+        
         updateAdditionalVendors(categoryKey, vendorName ? [vendorName] : []);
       });
       
