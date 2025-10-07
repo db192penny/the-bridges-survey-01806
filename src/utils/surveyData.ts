@@ -83,20 +83,10 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "All-Around Handyman",
     ],
   },
-  {
-    id: "painting",
-    title: "Painting / Painters",
-    description: "Who handles your painting projects?",
-    vendors: [
-      "Premier Painting Pros",
-      "ColorPerfect Painters",
-      "Elite Paint Services",
-      "Brushworks Painting",
-    ],
-  },
 ];
 
 export const ADDITIONAL_CATEGORIES = [
+  "Painting/Painters",
   "Appliance Repair",
   "Pressure Washing",
   "Carpet Cleaning",

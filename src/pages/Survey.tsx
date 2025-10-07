@@ -38,9 +38,18 @@ const Survey = () => {
     });
     return texts;
   });
+  
+  // State for tracking which additional categories have vendor recommendations
+  const [vendorCheckboxes, setVendorCheckboxes] = useState<Record<string, boolean>>(() => {
+    const checkboxes: Record<string, boolean> = {};
+    Object.entries(draft.additional_vendors).forEach(([key, vendors]) => {
+      checkboxes[key] = vendors.length > 0;
+    });
+    return checkboxes;
+  });
 
-  // Calculate total steps dynamically
-  const totalSteps = 10 + selectedAdditional.length;
+  // Fixed total steps: 1 (contact) + 7 (main categories) + 1 (additional selection) + 1 (vendor recommendations)
+  const totalSteps = 10;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -142,8 +151,8 @@ const Survey = () => {
     );
   }
 
-  // Steps 2-9: Category Questions
-  if (step >= 2 && step <= 9) {
+  // Steps 2-8: Category Questions (7 main categories)
+  if (step >= 2 && step <= 8) {
     const categoryIndex = step - 2;
     const category = VENDOR_CATEGORIES[categoryIndex];
     const existingResponse = draft.responses[category.id];
@@ -173,8 +182,8 @@ const Survey = () => {
     );
   }
 
-  // Step 10: Additional Categories Selection
-  if (step === 10) {
+  // Step 9: Additional Categories Selection
+  if (step === 9) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-secondary/30 to-background py-8 px-4">
         <div className="container max-w-2xl mx-auto">
@@ -262,23 +271,46 @@ const Survey = () => {
     );
   }
 
-  // Steps 11+: Collect vendor names for selected additional categories
-  if (step > 10) {
-    const additionalIndex = step - 11;
-    const currentCategory = selectedAdditional[additionalIndex];
-    const categoryKey = currentCategory.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-    const vendorText = vendorTexts[categoryKey] || "";
-
-    const handleAdditionalNext = () => {
-      const vendors = vendorText
-        .split(/[\n,]+/)
-        .map((v) => v.trim())
-        .filter(Boolean);
-      updateAdditionalVendors(categoryKey, vendors);
-      handleNext();
+  // Step 10: Consolidated vendor recommendation page for all selected additional categories
+  if (step === 10) {
+    const handleSubmit = () => {
+      // Save vendor recommendations for all selected categories
+      selectedAdditional.forEach((category) => {
+        const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+        
+        if (vendorCheckboxes[categoryKey]) {
+          // Parse textarea content for checked categories
+          const vendors = (vendorTexts[categoryKey] || "")
+            .split(/[\n,]+/)
+            .map((v) => v.trim())
+            .filter(Boolean);
+          updateAdditionalVendors(categoryKey, vendors);
+        } else {
+          // Save empty array for unchecked categories
+          updateAdditionalVendors(categoryKey, []);
+        }
+      });
+      
+      submitSurvey();
+      navigate("/thank-you");
     };
     
-    const handleVendorTextChange = (text: string) => {
+    const handleSkipAll = () => {
+      // Save empty arrays for all categories
+      selectedAdditional.forEach((category) => {
+        const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+        updateAdditionalVendors(categoryKey, []);
+      });
+      
+      submitSurvey();
+      navigate("/thank-you");
+    };
+    
+    const handleCheckboxChange = (categoryKey: string, checked: boolean) => {
+      setVendorCheckboxes(prev => ({ ...prev, [categoryKey]: checked }));
+    };
+    
+    const handleTextChange = (categoryKey: string, text: string) => {
       setVendorTexts(prev => ({ ...prev, [categoryKey]: text }));
     };
 
@@ -297,40 +329,62 @@ const Survey = () => {
 
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-              {currentCategory}
+              Do you know any great vendors for these services? 🌟
             </h2>
             <p className="text-lg text-muted-foreground">
-              Know any great {currentCategory.toLowerCase()} vendors in our community?
+              Check the box for any service where you can recommend vendors
             </p>
           </div>
 
-          <div className="max-w-xl mx-auto space-y-4">
-            <Textarea
-              placeholder="Enter vendor names - one per line or separated by commas&#10;&#10;Example:&#10;ABC Roofing&#10;Quality Roofing Company&#10;Top Tier Roofs"
-              value={vendorText}
-              onChange={(e) => handleVendorTextChange(e.target.value)}
-              className="min-h-[200px] text-base"
-            />
+          <div className="max-w-xl mx-auto space-y-6">
+            {selectedAdditional.map((category) => {
+              const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+              const isChecked = vendorCheckboxes[categoryKey] || false;
+              const textValue = vendorTexts[categoryKey] || "";
+              
+              return (
+                <div key={category} className="p-6 rounded-lg border border-border bg-card">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Checkbox
+                      id={`vendor-${categoryKey}`}
+                      checked={isChecked}
+                      onCheckedChange={(checked) => handleCheckboxChange(categoryKey, !!checked)}
+                    />
+                    <Label 
+                      htmlFor={`vendor-${categoryKey}`} 
+                      className="text-lg font-medium cursor-pointer flex-1"
+                    >
+                      {category}
+                    </Label>
+                  </div>
+                  
+                  <Textarea
+                    placeholder="Enter vendor names - one per line or separated by commas"
+                    value={textValue}
+                    onChange={(e) => handleTextChange(categoryKey, e.target.value)}
+                    disabled={!isChecked}
+                    className="min-h-[100px] text-base"
+                  />
+                </div>
+              );
+            })}
 
-            <div className="pt-4 space-y-3">
+            <div className="pt-6 space-y-3">
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => {
-                  updateAdditionalVendors(categoryKey, []);
-                  handleNext();
-                }}
+                onClick={handleSkipAll}
                 className="w-full"
               >
-                I don't know any
+                I don't know any vendors for these
               </Button>
 
               <Button
                 size="lg"
-                onClick={handleAdditionalNext}
+                onClick={handleSubmit}
                 className="w-full h-14 text-lg"
               >
-                Next
+                Submit Survey
               </Button>
             </div>
           </div>
