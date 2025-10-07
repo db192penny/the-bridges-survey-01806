@@ -318,12 +318,20 @@ const Admin = () => {
                   <TableHead>Phone</TableHead>
                   <TableHead>Completed</TableHead>
                   <TableHead>Skipped</TableHead>
+                  <TableHead>Vendors</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredResponses.map((response) => {
                   const completed = Object.values(response.responses).filter((r) => !r.skipped).length;
                   const skipped = Object.values(response.responses).filter((r) => r.skipped).length;
+                  
+                  // Count total vendors submitted (from main categories + additional vendors)
+                  const mainVendorsCount = Object.values(response.responses).reduce((count, r) => 
+                    count + r.vendors.length, 0);
+                  const additionalVendorsCount = Object.values(response.additional_vendors).reduce((count, vendors) => 
+                    count + vendors.filter(Boolean).length, 0);
+                  const totalVendors = mainVendorsCount + additionalVendorsCount;
 
                   return (
                     <>
@@ -340,10 +348,11 @@ const Admin = () => {
                         <TableCell>{response.phone || "—"}</TableCell>
                         <TableCell>{completed}</TableCell>
                         <TableCell>{skipped}</TableCell>
+                        <TableCell>{totalVendors}</TableCell>
                       </TableRow>
                       {expandedRow === response.id && (
                         <TableRow>
-                          <TableCell colSpan={6} className="bg-secondary/30">
+                          <TableCell colSpan={7} className="bg-secondary/30">
                             <div className="p-4 space-y-2 text-sm">
                               {Object.entries(response.responses).map(([catId, catData]) => {
                                 const category = VENDOR_CATEGORIES.find((c) => c.id === catId);
@@ -358,8 +367,17 @@ const Admin = () => {
                               })}
                               {response.additional_categories_requested.length > 0 && (
                                 <div className="pt-2 border-t">
-                                  <strong>Additional Categories:</strong>{" "}
+                                  <strong>Additional Categories Requested:</strong>{" "}
                                   {response.additional_categories_requested.join(", ")}
+                                </div>
+                              )}
+                              {Object.keys(response.additional_vendors).length > 0 && (
+                                <div className="pt-2 border-t">
+                                  <strong>Additional Vendors:</strong>{" "}
+                                  {Object.entries(response.additional_vendors)
+                                    .filter(([, vendors]) => vendors.length > 0 && vendors[0])
+                                    .map(([cat, vendors]) => `${cat}: ${vendors.join(", ")}`)
+                                    .join(" | ") || "None provided"}
                                 </div>
                               )}
                             </div>
