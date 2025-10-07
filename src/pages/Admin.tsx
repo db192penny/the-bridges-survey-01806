@@ -132,6 +132,15 @@ const Admin = () => {
           vendorCounts[vendor] = (vendorCounts[vendor] || 0) + 1;
         });
       });
+      
+      // Count vendors from additional categories
+      Object.values(r.additional_vendors || {}).forEach((vendors) => {
+        if (Array.isArray(vendors)) {
+          vendors.filter(Boolean).forEach((vendor) => {
+            vendorCounts[vendor] = (vendorCounts[vendor] || 0) + 1;
+          });
+        }
+      });
     });
 
     const topVendors = Object.entries(vendorCounts)
