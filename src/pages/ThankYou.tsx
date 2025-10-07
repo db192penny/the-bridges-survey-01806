@@ -35,7 +35,7 @@ const ThankYou = () => {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-          You're Amazing! 🎉
+          Thanks for Helping Out The Bridges!
         </h1>
 
         <p className="text-lg text-muted-foreground mb-6">
