@@ -6,7 +6,8 @@ const DRAFT_KEY = "vendor_survey_draft";
 
 export interface SurveyDraft {
   name: string;
-  phone: string;
+  contact: string;
+  contactMethod: "email" | "phone";
   responses: Record<string, CategoryResponse>;
   additional_categories_requested: string[];
   additional_vendors: Record<string, string[]>;
@@ -17,10 +18,10 @@ export function useSurveyState() {
     const saved = localStorage.getItem(DRAFT_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Migrate old data structure (email -> phone)
       return {
         name: parsed.name || "",
-        phone: parsed.phone || "",
+        contact: parsed.contact || parsed.phone || "",
+        contactMethod: parsed.contactMethod || "phone",
         responses: parsed.responses || {},
         additional_categories_requested: parsed.additional_categories_requested || [],
         additional_vendors: parsed.additional_vendors || {},
@@ -28,7 +29,8 @@ export function useSurveyState() {
     }
     return {
       name: "",
-      phone: "",
+      contact: "",
+      contactMethod: "phone",
       responses: {},
       additional_categories_requested: [],
       additional_vendors: {},
@@ -39,8 +41,8 @@ export function useSurveyState() {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   }, [draft]);
 
-  const updateContactInfo = (name: string, phone: string) => {
-    setDraft((prev) => ({ ...prev, name, phone }));
+  const updateContactInfo = (name: string, contact: string, contactMethod: "email" | "phone") => {
+    setDraft((prev) => ({ ...prev, name, contact, contactMethod }));
   };
 
   const updateCategoryResponse = (categoryId: string, response: CategoryResponse) => {
@@ -74,7 +76,9 @@ export function useSurveyState() {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       name: draft.name,
-      phone: draft.phone,
+      phone: draft.contact,
+      contact: draft.contact,
+      contactMethod: draft.contactMethod,
       responses: draft.responses,
       additional_categories_requested: draft.additional_categories_requested,
       additional_vendors: draft.additional_vendors,
@@ -88,7 +92,8 @@ export function useSurveyState() {
   const clearDraft = () => {
     setDraft({
       name: "",
-      phone: "",
+      contact: "",
+      contactMethod: "phone",
       responses: {},
       additional_categories_requested: [],
       additional_vendors: {},

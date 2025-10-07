@@ -112,6 +112,8 @@ export interface SurveyResponse {
   timestamp: string;
   name: string;
   phone: string;
+  contact: string;
+  contactMethod: "email" | "phone";
   responses: Record<string, CategoryResponse>;
   additional_categories_requested: string[];
   additional_vendors: Record<string, string[]>;

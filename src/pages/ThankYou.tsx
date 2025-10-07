@@ -1,25 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Share2, Copy } from "lucide-react";
-import { useResponseCount, useSurveyState } from "@/hooks/useSurveyState";
+import { CheckCircle, Copy } from "lucide-react";
+import { useResponseCount, useSurveyState, getAllResponses } from "@/hooks/useSurveyState";
 import { toast } from "sonner";
 
 const ThankYou = () => {
   const navigate = useNavigate();
   const responseCount = useResponseCount();
   const { clearDraft } = useSurveyState();
+  
+  // Get the most recent response to determine contact method
+  const responses = getAllResponses();
+  const lastResponse = responses[responses.length - 1];
+  const contactMethod = lastResponse?.contactMethod || "phone";
 
   const surveyUrl = window.location.origin;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(surveyUrl);
     toast.success("Link copied to clipboard!");
-  };
-
-  const handleShareFacebook = () => {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(surveyUrl)}`;
-    window.open(url, "_blank", "width=600,height=400");
   };
 
   const handleSubmitAnother = () => {
@@ -46,7 +46,7 @@ const ThankYou = () => {
           <h2 className="text-xl font-semibold mb-3">What happens next?</h2>
           <div className="text-left space-y-3 text-muted-foreground">
             <p>✅ We'll compile everyone's recommendations</p>
-            <p>📱 Text you the complete vendor list within 7 days</p>
+            <p>{contactMethod === "phone" ? "📱" : "📧"} {contactMethod === "phone" ? "Text you a link" : "Email you the complete list"} within 7 days</p>
             <p>🏡 Share it with the whole community</p>
             <p>💪 Together we're making life easier for all our neighbors!</p>
           </div>
@@ -58,7 +58,7 @@ const ThankYou = () => {
             The more neighbors who share, the better our directory becomes!
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex justify-center">
             <Button
               variant="outline"
               size="lg"
@@ -67,16 +67,6 @@ const ThankYou = () => {
             >
               <Copy className="w-4 h-4" />
               Copy Link
-            </Button>
-
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={handleShareFacebook}
-              className="gap-2"
-            >
-              <Share2 className="w-4 h-4" />
-              Share on Facebook
             </Button>
           </div>
         </div>

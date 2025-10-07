@@ -24,7 +24,8 @@ const Survey = () => {
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState(draft.name || "");
-  const [phone, setPhone] = useState(draft.phone || "");
+  const [contact, setContact] = useState(draft.contact || "");
+  const [contactMethod, setContactMethod] = useState<"email" | "phone">(draft.contactMethod || "phone");
   const [selectedAdditional, setSelectedAdditional] = useState<string[]>(
     draft.additional_categories_requested || []
   );
@@ -121,26 +122,51 @@ const Survey = () => {
             </div>
 
             <div>
-              <Label htmlFor="phone">Your Phone Number</Label>
+              <Label className="mb-3 block">How should we contact you?</Label>
+              <div className="flex gap-4 mb-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="contactMethod"
+                    value="phone"
+                    checked={contactMethod === "phone"}
+                    onChange={(e) => setContactMethod(e.target.value as "phone")}
+                    className="w-4 h-4"
+                  />
+                  <span>Phone Number</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="contactMethod"
+                    value="email"
+                    checked={contactMethod === "email"}
+                    onChange={(e) => setContactMethod(e.target.value as "email")}
+                    className="w-4 h-4"
+                  />
+                  <span>Email</span>
+                </label>
+              </div>
+              
               <Input
-                id="phone"
-                type="tel"
-                placeholder="(555) 123-4567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="h-14 text-base mt-2"
+                id="contact"
+                type={contactMethod === "email" ? "email" : "tel"}
+                placeholder={contactMethod === "email" ? "john@example.com" : "(555) 123-4567"}
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                className="h-14 text-base"
               />
             </div>
 
             <Button
               size="lg"
               onClick={() => {
-                if (name?.trim() && phone?.trim()) {
-                  updateContactInfo(name, phone);
+                if (name?.trim() && contact?.trim()) {
+                  updateContactInfo(name, contact, contactMethod);
                   handleNext();
                 }
               }}
-              disabled={!name?.trim() || !phone?.trim()}
+              disabled={!name?.trim() || !contact?.trim()}
               className="w-full h-14 text-lg mt-6"
             >
               Next
