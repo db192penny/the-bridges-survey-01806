@@ -6,7 +6,8 @@ export function generateMainCSV(responses: SurveyResponse[]): string {
   const headers = [
     "Timestamp",
     "Name",
-    "Phone",
+    "Contact Method",
+    "Contact",
     "Pool Service",
     "Pool Skip Reason",
     "HVAC",
@@ -32,7 +33,8 @@ export function generateMainCSV(responses: SurveyResponse[]): string {
     return [
       new Date(response.timestamp).toLocaleString(),
       response.name || "",
-      response.phone || "",
+      response.contactMethod || "phone",
+      response.contact || response.phone || "",
       r.pool_service?.vendors.join("; ") || "",
       r.pool_service?.skip_reason || "",
       r.hvac?.vendors.join("; ") || "",
