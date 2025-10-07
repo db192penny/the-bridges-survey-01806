@@ -24,7 +24,7 @@ const Survey = () => {
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState(draft.name);
-  const [email, setEmail] = useState(draft.email);
+  const [phone, setPhone] = useState(draft.phone);
   const [selectedAdditional, setSelectedAdditional] = useState<string[]>(
     draft.additional_categories_requested
   );
@@ -49,8 +49,6 @@ const Survey = () => {
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
-    } else {
-      navigate("/");
     }
   };
 
@@ -88,13 +86,13 @@ const Survey = () => {
               Let's Get Started!
             </h2>
             <p className="text-lg text-muted-foreground">
-              We'll email you the complete vendor list when it's ready!
+              We'll send you the complete vendor list when it's ready!
             </p>
           </div>
 
           <div className="space-y-4 max-w-md mx-auto">
             <div>
-              <Label htmlFor="name">Your Name (optional)</Label>
+              <Label htmlFor="name">Your Name</Label>
               <Input
                 id="name"
                 placeholder="John Smith"
@@ -105,13 +103,13 @@ const Survey = () => {
             </div>
 
             <div>
-              <Label htmlFor="email">Your Email (optional)</Label>
+              <Label htmlFor="phone">Your Phone Number</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="phone"
+                type="tel"
+                placeholder="(555) 123-4567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="h-14 text-base mt-2"
               />
             </div>
@@ -119,9 +117,12 @@ const Survey = () => {
             <Button
               size="lg"
               onClick={() => {
-                updateContactInfo(name, email);
-                handleNext();
+                if (name.trim() && phone.trim()) {
+                  updateContactInfo(name, phone);
+                  handleNext();
+                }
               }}
+              disabled={!name.trim() || !phone.trim()}
               className="w-full h-14 text-lg mt-6"
             >
               Next

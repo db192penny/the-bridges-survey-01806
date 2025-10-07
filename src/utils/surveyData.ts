@@ -130,8 +130,8 @@ export interface CategoryResponse {
 export interface SurveyResponse {
   id: string;
   timestamp: string;
-  name: string | null;
-  email: string | null;
+  name: string;
+  phone: string;
   responses: Record<string, CategoryResponse>;
   additional_categories_requested: string[];
   additional_vendors: Record<string, string[]>;

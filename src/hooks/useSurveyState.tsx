@@ -6,7 +6,7 @@ const DRAFT_KEY = "vendor_survey_draft";
 
 export interface SurveyDraft {
   name: string;
-  email: string;
+  phone: string;
   responses: Record<string, CategoryResponse>;
   additional_categories_requested: string[];
   additional_vendors: Record<string, string[]>;
@@ -20,7 +20,7 @@ export function useSurveyState() {
     }
     return {
       name: "",
-      email: "",
+      phone: "",
       responses: {},
       additional_categories_requested: [],
       additional_vendors: {},
@@ -31,8 +31,8 @@ export function useSurveyState() {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   }, [draft]);
 
-  const updateContactInfo = (name: string, email: string) => {
-    setDraft((prev) => ({ ...prev, name, email }));
+  const updateContactInfo = (name: string, phone: string) => {
+    setDraft((prev) => ({ ...prev, name, phone }));
   };
 
   const updateCategoryResponse = (categoryId: string, response: CategoryResponse) => {
@@ -65,8 +65,8 @@ export function useSurveyState() {
     const newResponse: SurveyResponse = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
-      name: draft.name || null,
-      email: draft.email || null,
+      name: draft.name,
+      phone: draft.phone,
       responses: draft.responses,
       additional_categories_requested: draft.additional_categories_requested,
       additional_vendors: draft.additional_vendors,
@@ -80,7 +80,7 @@ export function useSurveyState() {
   const clearDraft = () => {
     setDraft({
       name: "",
-      email: "",
+      phone: "",
       responses: {},
       additional_categories_requested: [],
       additional_vendors: {},

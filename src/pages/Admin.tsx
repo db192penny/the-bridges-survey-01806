@@ -75,13 +75,13 @@ const Admin = () => {
   const filteredResponses = responses.filter(
     (r) =>
       r.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      r.phone?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const calculateStats = () => {
     const total = responses.length;
-    const withEmail = responses.filter((r) => r.email).length;
-    const completionRate = total > 0 ? (withEmail / total) * 100 : 0;
+    const withPhone = responses.filter((r) => r.phone).length;
+    const completionRate = total > 0 ? (withPhone / total) * 100 : 0;
 
     // Calculate most popular vendors
     const vendorCounts: Record<string, number> = {};
@@ -226,7 +226,7 @@ const Admin = () => {
             <p className="text-3xl font-bold text-primary">{stats.total}</p>
           </Card>
           <Card className="p-6">
-            <h3 className="text-sm text-muted-foreground mb-1">With Email</h3>
+            <h3 className="text-sm text-muted-foreground mb-1">With Phone</h3>
             <p className="text-3xl font-bold">{stats.completionRate.toFixed(0)}%</p>
           </Card>
           <Card className="p-6">
@@ -250,7 +250,7 @@ const Admin = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">All Responses</h2>
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search by name or phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-xs"
@@ -264,7 +264,7 @@ const Admin = () => {
                   <TableHead></TableHead>
                   <TableHead>Timestamp</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
                   <TableHead>Completed</TableHead>
                   <TableHead>Skipped</TableHead>
                 </TableRow>
@@ -286,7 +286,7 @@ const Admin = () => {
                         </TableCell>
                         <TableCell>{new Date(response.timestamp).toLocaleString()}</TableCell>
                         <TableCell>{response.name || "—"}</TableCell>
-                        <TableCell>{response.email || "—"}</TableCell>
+                        <TableCell>{response.phone || "—"}</TableCell>
                         <TableCell>{completed}</TableCell>
                         <TableCell>{skipped}</TableCell>
                       </TableRow>

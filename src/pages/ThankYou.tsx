@@ -24,7 +24,7 @@ const ThankYou = () => {
 
   const handleSubmitAnother = () => {
     clearDraft();
-    navigate("/survey");
+    navigate("/");
   };
 
   return (
@@ -35,16 +35,28 @@ const ThankYou = () => {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-          Thanks for Contributing! 🎉
+          You're Amazing! 🎉
         </h1>
 
-        <p className="text-lg text-muted-foreground mb-8">
-          We'll compile everyone's recommendations and email the complete vendor directory to you
-          within 7 days.
+        <p className="text-lg text-muted-foreground mb-6">
+          Thanks for helping build our community's trusted vendor directory!
         </p>
 
         <div className="bg-secondary/50 rounded-xl p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-3">What happens next?</h2>
+          <div className="text-left space-y-3 text-muted-foreground">
+            <p>✅ We'll compile everyone's recommendations</p>
+            <p>📱 Text you the complete vendor list within 7 days</p>
+            <p>🏡 Share it with the whole community</p>
+            <p>💪 Together we're making life easier for all our neighbors!</p>
+          </div>
+        </div>
+
+        <div className="bg-primary/10 rounded-xl p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Know other neighbors who'd contribute?</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            The more neighbors who share, the better our directory becomes!
+          </p>
           
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
