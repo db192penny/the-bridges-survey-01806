@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { VendorButton } from "./VendorButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,13 @@ export function CategoryQuestion({ category, onNext, initialVendors = [] }: Cate
   const [otherValue, setOtherValue] = useState(
     initialVendors.find((v) => v.startsWith("Other:"))?.replace("Other: ", "") || ""
   );
+  const otherInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showOther && otherInputRef.current) {
+      otherInputRef.current.focus();
+    }
+  }, [showOther]);
 
   const toggleVendor = (vendor: string) => {
     setSelectedVendors((prev) =>
@@ -66,6 +73,7 @@ export function CategoryQuestion({ category, onNext, initialVendors = [] }: Cate
         {showOther ? (
           <div className="space-y-2">
             <Input
+              ref={otherInputRef}
               placeholder="Enter service provider name..."
               value={otherValue}
               onChange={(e) => setOtherValue(e.target.value)}
