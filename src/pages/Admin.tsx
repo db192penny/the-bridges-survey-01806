@@ -10,15 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { getAllResponses, clearAllResponses } from "@/hooks/useSurveyState";
+import { getAllResponses } from "@/hooks/useSurveyState";
 import { generateMainCSV, generateAdditionalCategoriesCSV, downloadCSV } from "@/utils/csvExport";
 import { SurveyResponse, VENDOR_CATEGORIES } from "@/utils/surveyData";
 import { Download, Trash2, ChevronDown, ChevronRight, BarChart3, Upload } from "lucide-react";
@@ -31,7 +23,6 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  const [showClearDialog, setShowClearDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -65,11 +56,14 @@ const Admin = () => {
     toast.success("Additional categories exported!");
   };
 
-  const handleClearAll = () => {
-    clearAllResponses();
-    setResponses([]);
-    setShowClearDialog(false);
-    toast.success("All data cleared!");
+  const handleDeleteResponse = (id: string, name: string) => {
+    if (confirm(`Delete response from ${name || "this user"}?`)) {
+      const allResponses = getAllResponses();
+      const filtered = allResponses.filter(r => r.id !== id);
+      localStorage.setItem("vendor_survey_responses", JSON.stringify(filtered));
+      setResponses(filtered);
+      toast.success("Response deleted!");
+    }
   };
 
   const handleImportBackup = () => {
@@ -259,14 +253,6 @@ const Admin = () => {
               <Upload className="w-4 h-4" />
               Import Backup
             </Button>
-            <Button
-              onClick={() => setShowClearDialog(true)}
-              variant="destructive"
-              className="gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              Clear All
-            </Button>
           </div>
         </div>
 
@@ -319,6 +305,7 @@ const Admin = () => {
                   <TableHead>Completed</TableHead>
                   <TableHead>Skipped</TableHead>
                   <TableHead>Vendors</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -335,8 +322,11 @@ const Admin = () => {
 
                   return (
                     <>
-                      <TableRow key={response.id} className="cursor-pointer" onClick={() => setExpandedRow(expandedRow === response.id ? null : response.id)}>
-                        <TableCell>
+                      <TableRow key={response.id}>
+                        <TableCell 
+                          className="cursor-pointer" 
+                          onClick={() => setExpandedRow(expandedRow === response.id ? null : response.id)}
+                        >
                           {expandedRow === response.id ? (
                             <ChevronDown className="w-4 h-4" />
                           ) : (
@@ -349,10 +339,23 @@ const Admin = () => {
                         <TableCell>{completed}</TableCell>
                         <TableCell>{skipped}</TableCell>
                         <TableCell>{totalVendors}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteResponse(response.id, response.name);
+                            }}
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                       {expandedRow === response.id && (
                         <TableRow>
-                          <TableCell colSpan={7} className="bg-secondary/30">
+                          <TableCell colSpan={8} className="bg-secondary/30">
                             <div className="p-4 space-y-2 text-sm">
                               {Object.entries(response.responses).map(([catId, catData]) => {
                                 const category = VENDOR_CATEGORIES.find((c) => c.id === catId);
@@ -468,26 +471,6 @@ const Admin = () => {
           </Card>
         )}
       </div>
-
-      {/* Clear Confirmation Dialog */}
-      <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Clear All Data?</DialogTitle>
-            <DialogDescription>
-              This will permanently delete all survey responses. This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowClearDialog(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleClearAll}>
-              Delete Everything
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
