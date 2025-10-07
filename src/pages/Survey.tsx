@@ -102,7 +102,7 @@ const Survey = () => {
 
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-              Let's Get Started!
+              Thanks for Helping Out the Neighborhood! 🏡
             </h2>
             <p className="text-lg text-muted-foreground">
               We'll send you the complete vendor list when it's ready!
