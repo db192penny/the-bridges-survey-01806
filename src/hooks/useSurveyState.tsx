@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { SurveyResponse, CategoryResponse, VENDOR_CATEGORIES } from "@/utils/surveyData";
+import { sendSurveyNotification } from "@/utils/emailNotification";
 
 const STORAGE_KEY = "vendor_survey_responses";
 const DRAFT_KEY = "vendor_survey_draft";
@@ -87,6 +88,9 @@ export function useSurveyState() {
     responses.push(newResponse);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
     localStorage.removeItem(DRAFT_KEY);
+    
+    // Send email notification (non-blocking)
+    sendSurveyNotification(newResponse).catch(console.error);
   };
 
   const clearDraft = () => {
