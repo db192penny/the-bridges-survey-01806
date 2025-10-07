@@ -21,7 +21,7 @@ import {
 import { getAllResponses, clearAllResponses } from "@/hooks/useSurveyState";
 import { generateMainCSV, generateAdditionalCategoriesCSV, downloadCSV } from "@/utils/csvExport";
 import { SurveyResponse, VENDOR_CATEGORIES } from "@/utils/surveyData";
-import { Download, Trash2, ChevronDown, ChevronRight, BarChart3 } from "lucide-react";
+import { Download, Trash2, ChevronDown, ChevronRight, BarChart3, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 const ADMIN_PASSWORD = "courtney2025";
@@ -70,6 +70,53 @@ const Admin = () => {
     setResponses([]);
     setShowClearDialog(false);
     toast.success("All data cleared!");
+  };
+
+  const handleImportBackup = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const importedData = JSON.parse(text);
+        
+        // Validate it's an array
+        if (!Array.isArray(importedData)) {
+          toast.error("Invalid backup file: Expected an array of responses");
+          return;
+        }
+
+        // Get existing responses
+        const existing = getAllResponses();
+        
+        // Merge: Add new responses that don't already exist (by ID)
+        const existingIds = new Set(existing.map(r => r.id));
+        const newResponses = importedData.filter((r: SurveyResponse) => !existingIds.has(r.id));
+        
+        if (newResponses.length === 0) {
+          toast.info("No new responses to import");
+          return;
+        }
+
+        // Save merged data
+        const merged = [...existing, ...newResponses];
+        localStorage.setItem("vendor_survey_responses", JSON.stringify(merged));
+        
+        // Refresh display
+        loadResponses();
+        toast.success(`Imported ${newResponses.length} new response${newResponses.length === 1 ? '' : 's'}!`);
+      } catch (error) {
+        console.error("Import error:", error);
+        toast.error("Failed to import backup: Invalid JSON file");
+      }
+    };
+
+    input.click();
   };
 
   const filteredResponses = responses.filter(
@@ -207,6 +254,10 @@ const Admin = () => {
             <Button onClick={handleExportAdditional} variant="outline" className="gap-2">
               <Download className="w-4 h-4" />
               Export Additional
+            </Button>
+            <Button onClick={handleImportBackup} variant="outline" className="gap-2">
+              <Upload className="w-4 h-4" />
+              Import Backup
             </Button>
             <Button
               onClick={() => setShowClearDialog(true)}
