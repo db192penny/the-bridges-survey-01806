@@ -15,7 +15,6 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "Crystal Clear Pools",
       "Sunshine Pool Care",
       "Paradise Pool Maintenance",
-      "Emerald Waters Pools",
     ],
   },
   {
@@ -27,7 +26,6 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "Precision Air Systems",
       "Climate Control Pros",
       "Arctic Air Solutions",
-      "Comfort Zone HVAC",
     ],
   },
   {
@@ -39,7 +37,6 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "Premier Lawn Service",
       "Tropical Gardens Care",
       "Elite Yard Maintenance",
-      "Perfect Greens Landscaping",
     ],
   },
   {
@@ -51,7 +48,6 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "Bug-Free Solutions",
       "EcoSafe Pest Services",
       "Shield Pest Management",
-      "ZeroBug Exterminators",
     ],
   },
   {
@@ -63,7 +59,6 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "PowerUp Electrical",
       "Reliable Electric Pros",
       "Spark Electrical Solutions",
-      "Voltage Masters",
     ],
   },
   {
@@ -75,7 +70,6 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "Crystal Plumbing Services",
       "DrainMaster Plumbers",
       "Aqua Works Plumbing",
-      "PipeWorks Pros",
     ],
   },
   {
@@ -87,7 +81,6 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "HandyPro Solutions",
       "Mr. Fix-It Home Repair",
       "All-Around Handyman",
-      "The Repair Guy",
     ],
   },
   {
@@ -99,7 +92,6 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
       "Pristine Home Cleaning",
       "Fresh Start Cleaners",
       "Spotless Solutions",
-      "Shine Bright Cleaning",
     ],
   },
 ];
