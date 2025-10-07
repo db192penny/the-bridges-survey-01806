@@ -66,7 +66,7 @@ export function CategoryQuestion({ category, onNext, initialVendors = [] }: Cate
         {showOther ? (
           <div className="space-y-2">
             <Input
-              placeholder="Enter vendor name..."
+              placeholder="Enter service provider name..."
               value={otherValue}
               onChange={(e) => setOtherValue(e.target.value)}
               className="h-14 text-base"

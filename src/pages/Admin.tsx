@@ -46,7 +46,7 @@ const Admin = () => {
 
   const handleExportMain = () => {
     const csv = generateMainCSV(responses);
-    downloadCSV(csv, "vendor_survey_responses.csv");
+    downloadCSV(csv, "service_provider_survey_responses.csv");
     toast.success("Main data exported!");
   };
 
@@ -284,7 +284,7 @@ const Admin = () => {
             </p>
           </Card>
           <Card className="p-6">
-            <h3 className="text-sm text-muted-foreground mb-1">Top Vendor</h3>
+            <h3 className="text-sm text-muted-foreground mb-1">Top Service Provider</h3>
             <p className="text-lg font-semibold truncate">
               {stats.topVendors[0]?.[0] || "N/A"}
             </p>
@@ -313,7 +313,7 @@ const Admin = () => {
                   <TableHead>Phone</TableHead>
                   <TableHead>Completed</TableHead>
                   <TableHead>Skipped</TableHead>
-                  <TableHead>Vendors</TableHead>
+                  <TableHead>Service Providers</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
@@ -384,8 +384,8 @@ const Admin = () => {
                                 </div>
                               )}
                               {Object.keys(response.additional_vendors).length > 0 && (
-                                <div className="pt-2 border-t">
-                                  <strong>Additional Vendors:</strong>{" "}
+                                 <div className="pt-2 border-t">
+                                  <strong>Additional Service Providers:</strong>{" "}
                                   {response.additional_categories_requested
                                     .map((categoryName) => {
                                       const categoryKey = categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
@@ -441,7 +441,7 @@ const Admin = () => {
                   </div>
                   {topVendors.length > 0 && (
                     <div className="mt-2">
-                      <span className="text-sm text-muted-foreground">Top Vendors: </span>
+                      <span className="text-sm text-muted-foreground">Top Service Providers: </span>
                       {topVendors.map(([vendor, count]) => (
                         <span key={vendor} className="text-sm mr-3">
                           {vendor} ({count})

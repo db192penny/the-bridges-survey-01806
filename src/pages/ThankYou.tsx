@@ -45,8 +45,8 @@ const ThankYou = () => {
         <div className="bg-secondary/50 rounded-xl p-6 mb-8">
           <h2 className="text-xl font-semibold mb-3">What happens next?</h2>
           <div className="text-left space-y-3 text-muted-foreground">
-            <p>✅ I'll compile a list of vendors everyone uses</p>
-            <p>📝 I may reach out to you for reviews on vendors</p>
+            <p>✅ I'll compile a list of service providers everyone uses</p>
+            <p>📝 I may reach out to you for reviews on service providers</p>
             <p>{contactMethod === "phone" ? "📱" : "📧"} {contactMethod === "phone" ? "Text you a link" : "Email you the complete list"} within 7 days</p>
             <p>🏡 Share it with the whole community</p>
             <p>💪 Together we're making life easier for all our neighbors!</p>
@@ -56,7 +56,7 @@ const ThankYou = () => {
         <div className="bg-primary/10 rounded-xl p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Know other neighbors who'd contribute?</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            The more neighbors who share, the better our directory becomes!
+            The more neighbors who share, the better our service provider directory becomes!
           </p>
           
           <div className="flex justify-center">
