@@ -29,6 +29,15 @@ const Survey = () => {
     draft.additional_categories_requested || []
   );
   const [otherCategory, setOtherCategory] = useState("");
+  
+  // State for additional vendor text inputs - must be at top level to avoid hooks violations
+  const [vendorTexts, setVendorTexts] = useState<Record<string, string>>(() => {
+    const texts: Record<string, string> = {};
+    Object.entries(draft.additional_vendors).forEach(([key, vendors]) => {
+      texts[key] = vendors.join("\n");
+    });
+    return texts;
+  });
 
   // Calculate total steps dynamically
   const totalSteps = 10 + selectedAdditional.length;
@@ -258,8 +267,7 @@ const Survey = () => {
     const additionalIndex = step - 11;
     const currentCategory = selectedAdditional[additionalIndex];
     const categoryKey = currentCategory.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-    const existingVendors = draft.additional_vendors[categoryKey] || [];
-    const [vendorText, setVendorText] = useState(existingVendors.join("\n"));
+    const vendorText = vendorTexts[categoryKey] || "";
 
     const handleAdditionalNext = () => {
       const vendors = vendorText
@@ -268,6 +276,10 @@ const Survey = () => {
         .filter(Boolean);
       updateAdditionalVendors(categoryKey, vendors);
       handleNext();
+    };
+    
+    const handleVendorTextChange = (text: string) => {
+      setVendorTexts(prev => ({ ...prev, [categoryKey]: text }));
     };
 
     return (
@@ -296,7 +308,7 @@ const Survey = () => {
             <Textarea
               placeholder="Enter vendor names - one per line or separated by commas&#10;&#10;Example:&#10;ABC Roofing&#10;Quality Roofing Company&#10;Top Tier Roofs"
               value={vendorText}
-              onChange={(e) => setVendorText(e.target.value)}
+              onChange={(e) => handleVendorTextChange(e.target.value)}
               className="min-h-[200px] text-base"
             />
 
