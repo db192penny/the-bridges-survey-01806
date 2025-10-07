@@ -188,6 +188,7 @@ const Survey = () => {
           <ProgressBar current={step} total={totalSteps} />
 
           <CategoryQuestion
+            key={category.id}
             category={category}
             initialVendors={existingResponse?.vendors || []}
             onNext={(vendors, skipReason) =>
