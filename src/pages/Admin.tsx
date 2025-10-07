@@ -325,8 +325,8 @@ const Admin = () => {
                   // Count total vendors submitted (from main categories + additional vendors)
                   const mainVendorsCount = Object.values(response.responses).reduce((count, r) => 
                     count + r.vendors.length, 0);
-                  const additionalVendorsCount = Object.values(response.additional_vendors).reduce((count, vendors) => 
-                    count + vendors.filter(Boolean).length, 0);
+                  const additionalVendorsCount = Object.values(response.additional_vendors || {}).reduce((count, vendors) => 
+                    count + (Array.isArray(vendors) ? vendors.filter(Boolean).length : 0), 0);
                   const totalVendors = mainVendorsCount + additionalVendorsCount;
 
                   return (
