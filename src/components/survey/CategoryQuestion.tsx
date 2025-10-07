@@ -30,6 +30,13 @@ export function CategoryQuestion({ category, onNext, initialVendors = [] }: Cate
     if (showOther && otherValue.trim()) {
       vendors.push(`Other: ${otherValue.trim()}`);
     }
+    console.log('CategoryQuestion submitting vendors:', {
+      category: category.id,
+      selectedVendors,
+      showOther,
+      otherValue,
+      finalVendors: vendors
+    });
     onNext(vendors, null);
   };
 
