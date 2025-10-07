@@ -45,8 +45,54 @@ const handler = async (req: Request): Promise<Response> => {
     );
     const totalVendors = mainVendors + additionalVendors;
 
+    // Category mapping for display names
+    const categoryNames: Record<string, string> = {
+      pool_service: "Pool Service",
+      hvac: "HVAC / Air Conditioning",
+      landscaping: "Landscaping / Lawn Care",
+      pest_control: "Pest Control",
+      electrician: "Electrician",
+      plumber: "Plumber",
+      handyman: "Handyman"
+    };
+
+    // Build vendor list by category
+    let vendorList = "\n\nSelected Service Providers:\n";
+    vendorList += "=" + "=".repeat(50) + "\n\n";
+
+    // Main categories
+    Object.entries(responseData.responses || {}).forEach(([catId, catData]: [string, any]) => {
+      if (catData?.vendors?.length > 0) {
+        const categoryName = categoryNames[catId] || catId;
+        vendorList += `${categoryName}:\n`;
+        catData.vendors.forEach((vendor: string) => {
+          vendorList += `  • ${vendor}\n`;
+        });
+        vendorList += "\n";
+      }
+    });
+
+    // Additional categories
+    if (responseData.additional_vendors && Object.keys(responseData.additional_vendors).length > 0) {
+      const additionalCats = responseData.additional_categories_requested || [];
+      additionalCats.forEach((categoryName: string) => {
+        const categoryKey = categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+        const vendors = responseData.additional_vendors?.[categoryKey] || [];
+        if (vendors.filter(Boolean).length > 0) {
+          vendorList += `${categoryName}:\n`;
+          vendors.filter(Boolean).forEach((vendor: string) => {
+            vendorList += `  • ${vendor}\n`;
+          });
+          vendorList += "\n";
+        }
+      });
+    }
+
+    const siteUrl = Deno.env.get("SUPABASE_URL")?.replace(/\.supabase\.co$/, ".lovable.app") || "your-site";
+    const adminUrl = `${siteUrl}/admin`;
+
     const emailBody = `
-New Vendor Survey Response
+New Service Provider Survey Response
 
 Submitted: ${new Date(responseData.timestamp).toLocaleString()}
 Name: ${responseData.name || 'Anonymous'}
@@ -55,10 +101,11 @@ Contact: ${responseData.contact || 'Not provided'}
 
 Summary:
 - Completed ${completedCategories} categories
-- Provided ${totalVendors} vendor recommendations
+- Provided ${totalVendors} service provider recommendations
 - Requested ${responseData.additional_categories_requested?.length || 0} additional categories
-
-View full response in admin panel.
+${vendorList}
+View full response in admin panel:
+${adminUrl}
     `.trim();
 
     // Send email using Resend API
@@ -69,7 +116,7 @@ View full response in admin panel.
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: "Vendor Survey <onboarding@resend.dev>",
+        from: "Service Provider Survey <onboarding@resend.dev>",
         to: [
           "db@fivefourventures.com",
           "lindsay.envision@gmail.com"
