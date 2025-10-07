@@ -96,7 +96,7 @@ const Survey = () => {
               Thanks for Helping Out The Bridges! 🏡
             </h2>
             <p className="text-lg text-muted-foreground">
-              We'll send you the complete vendor list when it's ready!
+              We'll send you the complete service provider list when it's ready!
             </p>
           </div>
 
@@ -113,7 +113,7 @@ const Survey = () => {
             </div>
 
             <div>
-              <Label className="mb-3 block">Where should we send your vendor list?</Label>
+              <Label className="mb-3 block">Where should we send your service provider list?</Label>
               <div className="flex gap-4 mb-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -343,10 +343,10 @@ const Survey = () => {
 
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-              Do you know any great vendors for these services? 🌟
+              Do you know any great service providers for these services? 🌟
             </h2>
             <p className="text-lg text-muted-foreground">
-              Enter a vendor name for any service you can recommend (optional)
+              Enter a service provider name for any service you can recommend (optional)
             </p>
           </div>
 
@@ -365,7 +365,7 @@ const Survey = () => {
                   </Label>
                   <Input
                     id={`vendor-${categoryKey}`}
-                    placeholder="Vendor name"
+                    placeholder="Service provider name"
                     value={textValue}
                     onChange={(e) => handleTextChange(categoryKey, e.target.value)}
                     className="h-12 text-base flex-1"
@@ -381,7 +381,7 @@ const Survey = () => {
                 onClick={handleSkipAll}
                 className="w-full"
               >
-                I don't know any vendors for these
+                I don't know any service providers for these
               </Button>
 
               <Button

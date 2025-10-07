@@ -16,10 +16,10 @@ const Index = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight">
             Help Build Our Community
             <br />
-            Vendor Directory! 🏡
+            Service Provider Directory! 🏡
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-            Share your trusted vendors in 2 minutes and we'll send the complete list to everyone
+            Share your trusted service providers in 2 minutes and we'll send the complete list to everyone
           </p>
 
           {/* Value Props */}
@@ -30,7 +30,7 @@ const Index = () => {
               </div>
               <h3 className="font-semibold mb-2">Trusted Recommendations</h3>
               <p className="text-sm text-muted-foreground">
-                Find vendors recommended by neighbors
+                Find service providers recommended by neighbors
               </p>
             </Card>
 
