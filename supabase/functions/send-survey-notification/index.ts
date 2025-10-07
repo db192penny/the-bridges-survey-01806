@@ -16,6 +16,7 @@ interface SurveyNotificationRequest {
     contactMethod?: string;
     responses: Record<string, any>;
     additional_categories_requested?: string[];
+    additional_vendors?: Record<string, string[]>;
   };
 }
 
@@ -36,10 +37,13 @@ const handler = async (req: Request): Promise<Response> => {
     ).length;
 
     // Count total vendors
-    const totalVendors = Object.values(responseData.responses || {}).reduce(
-      (acc: number, curr: any) => acc + (curr?.vendors?.length || 0), 
-      0
+    const mainVendors = Object.values(responseData.responses || {}).reduce(
+      (acc: number, curr: any) => acc + (curr?.vendors?.length || 0), 0
     );
+    const additionalVendors = Object.values(responseData.additional_vendors || {}).reduce(
+      (acc: number, vendors: any) => acc + (Array.isArray(vendors) ? vendors.filter(Boolean).length : 0), 0
+    );
+    const totalVendors = mainVendors + additionalVendors;
 
     const emailBody = `
 New Vendor Survey Response
