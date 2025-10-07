@@ -11,10 +11,10 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
     title: "Pool Service",
     description: "Who keeps your pool sparkling?",
     vendors: [
-      "Aqua Blue Pool Service",
-      "Crystal Clear Pools",
-      "Sunshine Pool Care",
-      "Paradise Pool Maintenance",
+      "EZ Pool (Victor Santos)",
+      "Swim Time Pools",
+      "Progressive Pools (Sam Santana)",
+      "Barefoot Pools",
     ],
   },
   {
@@ -22,10 +22,10 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
     title: "HVAC / Air Conditioning",
     description: "Who keeps you cool in summer?",
     vendors: [
-      "Cool Breeze AC & Heating",
-      "Precision Air Systems",
-      "Climate Control Pros",
-      "Arctic Air Solutions",
+      "Cousins Air",
+      "Direct Cooling",
+      "Ocean Air (Joe)",
+      "M&R",
     ],
   },
   {
@@ -33,10 +33,10 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
     title: "Landscaping / Lawn Care",
     description: "Who maintains your yard?",
     vendors: [
-      "Green Thumb Landscaping",
-      "Premier Lawn Service",
-      "Tropical Gardens Care",
-      "Elite Yard Maintenance",
+      "Felix Alverez Landscape",
+      "Tropical Earth Landscaping, INC.",
+      "Boca Raton landscape (Chris)",
+      "Annabella Chacon Landscaping",
     ],
   },
   {
@@ -44,10 +44,10 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
     title: "Pest Control",
     description: "Who keeps the bugs away?",
     vendors: [
-      "Guardian Pest Control",
-      "Bug-Free Solutions",
-      "EcoSafe Pest Services",
-      "Shield Pest Management",
+      "Fear Not Pest Control (Cicero Moreira)",
+      "Hometown Pest Control",
+      "Bug Man (Howie)",
+      "Bug Thugs",
     ],
   },
   {
@@ -55,10 +55,10 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
     title: "Electrician",
     description: "Who handles your electrical work?",
     vendors: [
-      "Bright Electric Services",
-      "PowerUp Electrical",
-      "Reliable Electric Pros",
-      "Spark Electrical Solutions",
+      "Alien electrical (Rafael Jaquetti)",
+      "Razorback",
+      "Caner Electric",
+      "Devine Electric (James)",
     ],
   },
   {
@@ -66,10 +66,10 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
     title: "Plumber",
     description: "Who fixes your plumbing?",
     vendors: [
-      "FastFlow Plumbing",
-      "Crystal Plumbing Services",
-      "DrainMaster Plumbers",
-      "Aqua Works Plumbing",
+      "Ward Plumbing",
+      "Masterclass plumbing (Trevor)",
+      "Sharp plumbing (Rob)",
+      "Team Plumbing",
     ],
   },
   {
@@ -77,10 +77,10 @@ export const VENDOR_CATEGORIES: VendorCategory[] = [
     title: "Handyman",
     description: "Who does your home repairs?",
     vendors: [
-      "Fix-It Frank Services",
-      "HandyPro Solutions",
-      "Mr. Fix-It Home Repair",
-      "All-Around Handyman",
+      "HM22 General Services (Hugo Blanco)",
+      "Tim Bradford (Individual)",
+      "Charles Harris (Individual)",
+      "Paul Tarantola (Individual)",
     ],
   },
 ];
