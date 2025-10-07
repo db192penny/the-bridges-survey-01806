@@ -16,7 +16,15 @@ export function useSurveyState() {
   const [draft, setDraft] = useState<SurveyDraft>(() => {
     const saved = localStorage.getItem(DRAFT_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Migrate old data structure (email -> phone)
+      return {
+        name: parsed.name || "",
+        phone: parsed.phone || "",
+        responses: parsed.responses || {},
+        additional_categories_requested: parsed.additional_categories_requested || [],
+        additional_vendors: parsed.additional_vendors || {},
+      };
     }
     return {
       name: "",

@@ -23,10 +23,10 @@ const Survey = () => {
   } = useSurveyState();
 
   const [step, setStep] = useState(1);
-  const [name, setName] = useState(draft.name);
-  const [phone, setPhone] = useState(draft.phone);
+  const [name, setName] = useState(draft.name || "");
+  const [phone, setPhone] = useState(draft.phone || "");
   const [selectedAdditional, setSelectedAdditional] = useState<string[]>(
-    draft.additional_categories_requested
+    draft.additional_categories_requested || []
   );
   const [otherCategory, setOtherCategory] = useState("");
 
@@ -117,12 +117,12 @@ const Survey = () => {
             <Button
               size="lg"
               onClick={() => {
-                if (name.trim() && phone.trim()) {
+                if (name?.trim() && phone?.trim()) {
                   updateContactInfo(name, phone);
                   handleNext();
                 }
               }}
-              disabled={!name.trim() || !phone.trim()}
+              disabled={!name?.trim() || !phone?.trim()}
               className="w-full h-14 text-lg mt-6"
             >
               Next
