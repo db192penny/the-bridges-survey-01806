@@ -45,8 +45,8 @@ const ThankYou = () => {
         <div className="bg-secondary/50 rounded-xl p-6 mb-8">
           <h2 className="text-xl font-semibold mb-3">What happens next?</h2>
           <div className="text-left space-y-3 text-muted-foreground">
-            <p>✅ We'll compile a list of vendors everyone uses</p>
-            <p>📝 We may reach out to you for reviews on vendors</p>
+            <p>✅ I'll compile a list of vendors everyone uses</p>
+            <p>📝 I may reach out to you for reviews on vendors</p>
             <p>{contactMethod === "phone" ? "📱" : "📧"} {contactMethod === "phone" ? "Text you a link" : "Email you the complete list"} within 7 days</p>
             <p>🏡 Share it with the whole community</p>
             <p>💪 Together we're making life easier for all our neighbors!</p>
