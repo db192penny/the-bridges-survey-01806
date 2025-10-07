@@ -122,7 +122,7 @@ const Survey = () => {
             </div>
 
             <div>
-              <Label className="mb-3 block">How should we contact you?</Label>
+              <Label className="mb-3 block">Where should we send your vendor list?</Label>
               <div className="flex gap-4 mb-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
