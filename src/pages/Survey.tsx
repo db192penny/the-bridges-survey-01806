@@ -324,6 +324,8 @@ const Survey = () => {
     
     const handleTextChange = (categoryKey: string, text: string) => {
       setVendorTexts(prev => ({ ...prev, [categoryKey]: text }));
+      // Save to draft immediately as user types
+      updateAdditionalVendors(categoryKey, text.trim() ? [text.trim()] : []);
     };
 
     return (
