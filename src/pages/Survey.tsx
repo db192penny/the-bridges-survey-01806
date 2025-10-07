@@ -5,11 +5,17 @@ import { CategoryQuestion } from "@/components/survey/CategoryQuestion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-
 import { Label } from "@/components/ui/label";
 import { useSurveyState } from "@/hooks/useSurveyState";
 import { VENDOR_CATEGORIES, ADDITIONAL_CATEGORIES, CategoryResponse } from "@/utils/surveyData";
 import { ArrowLeft } from "lucide-react";
+import { 
+  startSurveySession, 
+  updateSessionProgress, 
+  completeSurveySession, 
+  abandonSurveySession,
+  getCurrentSession 
+} from "@/utils/surveyAnalytics";
 
 const Survey = () => {
   const navigate = useNavigate();
@@ -43,12 +49,36 @@ const Survey = () => {
   // Fixed total steps: 1 (contact) + 7 (main categories) + 1 (additional selection) + 1 (vendor recommendations)
   const totalSteps = 10;
 
+  // Initialize tracking session
+  useEffect(() => {
+    const currentSession = getCurrentSession();
+    if (!currentSession) {
+      startSurveySession();
+    }
+  }, []);
+
+  // Track progress on step changes
+  useEffect(() => {
+    const categoryId = step >= 2 && step <= 8 
+      ? VENDOR_CATEGORIES[step - 2]?.id 
+      : undefined;
+    updateSessionProgress(step, categoryId);
+  }, [step]);
+
+  // Track abandonment on unmount
+  useEffect(() => {
+    return () => {
+      abandonSurveySession();
+    };
+  }, []);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
   const handleNext = () => {
     if (step === totalSteps) {
+      completeSurveySession();
       submitSurvey();
       navigate("/thank-you");
     } else {
@@ -307,6 +337,7 @@ const Survey = () => {
         updateAdditionalVendors(categoryKey, vendorName ? [vendorName] : []);
       });
       
+      completeSurveySession();
       submitSurvey();
       navigate("/thank-you");
     };
@@ -318,6 +349,7 @@ const Survey = () => {
         updateAdditionalVendors(categoryKey, []);
       });
       
+      completeSurveySession();
       submitSurvey();
       navigate("/thank-you");
     };

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -15,6 +16,7 @@ import { generateMainCSV, generateAdditionalCategoriesCSV, downloadCSV } from "@
 import { SurveyResponse, VENDOR_CATEGORIES } from "@/utils/surveyData";
 import { Download, Trash2, ChevronDown, ChevronRight, BarChart3, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 
 const ADMIN_PASSWORD = "courtney2025";
 
@@ -265,6 +267,18 @@ const Admin = () => {
           </div>
         </div>
 
+        <Tabs defaultValue="analytics" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="responses">All Responses</TabsTrigger>
+            <TabsTrigger value="insights">Category Insights</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard />
+          </TabsContent>
+
+          <TabsContent value="responses">
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           <Card className="p-6">
@@ -408,7 +422,9 @@ const Admin = () => {
             </Table>
           </div>
         </Card>
+          </TabsContent>
 
+          <TabsContent value="insights">
         {/* Category Insights */}
         <Card className="p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -484,6 +500,8 @@ const Admin = () => {
             </div>
           </Card>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
