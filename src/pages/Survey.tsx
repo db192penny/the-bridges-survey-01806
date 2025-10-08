@@ -323,7 +323,7 @@ const Survey = () => {
 
   // Step 10: Consolidated vendor recommendation page for all selected additional categories
   if (step === 10) {
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
       // Save vendor recommendations for all selected categories
       selectedAdditional.forEach((category) => {
         const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
@@ -340,11 +340,11 @@ const Survey = () => {
       });
       
       completeSurveySession();
-      submitSurvey();
+      await submitSurvey();
       navigate("/thank-you");
     };
     
-    const handleSkipAll = () => {
+    const handleSkipAll = async () => {
       // Save empty arrays for all categories
       selectedAdditional.forEach((category) => {
         const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
@@ -352,7 +352,7 @@ const Survey = () => {
       });
       
       completeSurveySession();
-      submitSurvey();
+      await submitSurvey();
       navigate("/thank-you");
     };
     
