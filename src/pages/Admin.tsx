@@ -50,8 +50,6 @@ function decodeQuotedPrintable(input: string): string {
 }
 
 const Admin = () => {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,39 +57,28 @@ const Admin = () => {
   const [manualEntryData, setManualEntryData] = useState("");
 
   useEffect(() => {
-    if (authenticated) {
-      loadResponses();
-      
-      // Subscribe to real-time changes
-      const channel = supabase
-        .channel('survey_responses_admin')
-        .on('postgres_changes', { 
-          event: '*', 
-          schema: 'public', 
-          table: 'survey_responses' 
-        }, () => {
-          loadResponses();
-        })
-        .subscribe();
+    loadResponses();
+    
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('survey_responses_admin')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'survey_responses' 
+      }, () => {
+        loadResponses();
+      })
+      .subscribe();
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [authenticated]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const loadResponses = async () => {
     const data = await getAllResponses();
     setResponses(data);
-  };
-
-  const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      setAuthenticated(true);
-      toast.success("Access granted!");
-    } else {
-      toast.error("Incorrect password. Please try again.");
-    }
   };
 
   const handleExportMain = () => {
@@ -434,29 +421,6 @@ const Admin = () => {
     return Object.entries(stats).sort(([, a], [, b]) => b.count - a.count);
   };
 
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-secondary/30 to-background flex items-center justify-center px-4">
-        <Card className="max-w-md w-full p-8">
-          <h1 className="text-2xl font-bold mb-4">Admin Access</h1>
-          <p className="text-muted-foreground mb-6">Enter the password to view survey results</p>
-          <div className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            />
-            <Button onClick={handleLogin} className="w-full">
-              Login
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
   const stats = calculateStats();
   const categoryStats = getCategoryStats();
   const additionalStats = getAdditionalCategoryStats();
@@ -517,16 +481,12 @@ const Admin = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="analytics" className="w-full">
+        <Tabs defaultValue="responses" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="responses">All Responses</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="insights">Category Insights</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="analytics">
-            <AnalyticsDashboard />
-          </TabsContent>
 
           <TabsContent value="responses">
         {/* Stats Cards */}
@@ -672,6 +632,10 @@ const Admin = () => {
             </Table>
           </div>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard />
           </TabsContent>
 
           <TabsContent value="insights">
