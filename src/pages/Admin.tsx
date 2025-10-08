@@ -157,31 +157,33 @@ const Admin = () => {
   };
 
   const parseEmailContent = (emailText: string) => {
-    // Find where the email body starts (after headers)
-    const bodyMatch = emailText.match(/\n\n([\s\S]+)/);
-    if (!bodyMatch) throw new Error("Could not find email body");
+    // Prefer starting from the known email body title if present
+    const bodyStartIdx = emailText.indexOf("New Service Provider Survey Response");
+    const bodyRaw = bodyStartIdx >= 0 ? emailText.slice(bodyStartIdx) : emailText;
     
-    const body = bodyMatch[1];
-    
-    // Extract fields
-    const nameMatch = body.match(/Name:\s*(.+)/);
-    const contactMatch = body.match(/Contact:\s*(.+)/);
-    const contactMethodMatch = body.match(/Contact Method:\s*(.+)/);
-    const timestampMatch = body.match(/Submitted:\s*(.+)/);
-    
+    // Fallback: slice after the first blank line (headers end)
+    const doubleNewlineIdx = bodyRaw.indexOf("\n\n");
+    const body = doubleNewlineIdx >= 0 ? bodyRaw.slice(doubleNewlineIdx + 2) : bodyRaw;
+
+    // Robust field extraction (multiline + case-insensitive)
+    const nameMatch = body.match(/^Name:\s*(.+)$/mi);
+    const contactMatch = body.match(/^Contact:\s*(.+)$/mi);
+    const contactMethodMatch = body.match(/^Contact Method:\s*(.+)$/mi);
+    const timestampMatch = body.match(/^Submitted:\s*(.+)$/mi);
+
     if (!nameMatch || !timestampMatch) {
       throw new Error("Required fields (Name, Timestamp) not found in email");
     }
-    
-    // Parse timestamp to ISO format
-    const submittedDate = new Date(timestampMatch[1]);
+
+    // Parse timestamp to ISO
+    const submittedDate = new Date(timestampMatch[1].trim());
     const timestamp = submittedDate.toISOString();
-    
-    // Extract vendors by category
+
+    // Initialize containers
     const responses: Record<string, any> = {};
     const additional_vendors: Record<string, string[]> = {};
     const additional_categories_requested: string[] = [];
-    
+
     const categoryMapping: Record<string, string> = {
       "Pool Service": "pool_service",
       "HVAC / Air Conditioning": "hvac",
@@ -189,57 +191,62 @@ const Admin = () => {
       "Pest Control": "pest_control",
       "Electrician": "electrician",
       "Plumber": "plumber",
-      "Handyman": "handyman"
+      "Handyman": "handyman",
     };
-    
-    // Find vendor list section - more flexible matching
-    const vendorSectionMatch = body.match(/Selected Service Providers:\s*=+\s*([\s\S]*?)(?=View full response|$)/);
-    
+
+    // Extract vendor section (between Selected... and View full response/end)
+    const vendorSectionMatch = body.match(/Selected Service Providers:[\s\S]*?(?=^View full response|\Z)/gmi);
+
     if (vendorSectionMatch) {
-      const vendorText = vendorSectionMatch[1];
-      
-      // Split by double newlines to get category blocks
-      const sections = vendorText.split(/\n\s*\n/);
-      
-      sections.forEach(section => {
-        const lines = section.trim().split('\n');
-        if (lines.length === 0) return;
-        
-        // First line is category name
-        const categoryLine = lines[0].trim();
-        if (!categoryLine || categoryLine.includes('===')) return;
-        
-        const categoryName = categoryLine.replace(/:$/, '').trim();
-        
-        // Check if it's a known category
-        const categoryKey = categoryMapping[categoryName];
-        
-        // Extract vendors (lines starting with •)
-        const vendors = lines
-          .slice(1)
-          .filter(line => line.trim().startsWith('•'))
-          .map(line => line.replace(/^\s*•\s*/, '').trim())
-          .filter(Boolean);
-        
-        if (vendors.length > 0) {
-          if (categoryKey) {
-            // Known category - add to responses
-            responses[categoryKey] = { 
-              vendors, 
-              skipped: false 
-            };
-          } else {
-            // Additional/custom category
-            const customKey = categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-            additional_vendors[customKey] = vendors;
-            if (!additional_categories_requested.includes(categoryName)) {
-              additional_categories_requested.push(categoryName);
+      const vendorText = vendorSectionMatch[0]
+        .replace(/Selected Service Providers:[\s\S]*?=+\s*/i, "") // remove title + divider
+        .trim();
+
+      const lines = vendorText.split(/\r?\n/);
+      let i = 0;
+      while (i < lines.length) {
+        const line = (lines[i] || "").trim();
+        // Skip empties and divider lines
+        if (!line || /^=+$/.test(line)) { i++; continue; }
+
+        // Category lines end with ":"
+        if (/:$/.test(line)) {
+          const categoryName = line.replace(/:$/, "").trim();
+          const isKnown = categoryMapping.hasOwnProperty(categoryName);
+          const categoryKey = isKnown ? categoryMapping[categoryName] : categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+          // Collect vendor lines until blank line or next category
+          const vendors: string[] = [];
+          i++;
+          while (i < lines.length) {
+            const l = (lines[i] || "").trim();
+            if (!l) break; // blank line ends block
+            if (/:$/.test(l)) break; // next category encountered
+            if (/^=+$/.test(l)) { i++; continue; } // skip dividers
+
+            // Accept bullets (•, -, *) or plain lines
+            const cleaned = l.replace(/^([•\-*])\s*/, "").trim();
+            if (cleaned) vendors.push(cleaned);
+            i++;
+          }
+
+          if (vendors.length > 0) {
+            if (isKnown) {
+              responses[categoryKey] = { vendors, skipped: false };
+            } else {
+              additional_vendors[categoryKey] = vendors;
+              if (!additional_categories_requested.includes(categoryName)) {
+                additional_categories_requested.push(categoryName);
+              }
             }
+            continue; // continue outer while without extra i++
           }
         }
-      });
+
+        i++;
+      }
     }
-    
+
     return {
       timestamp,
       name: nameMatch[1].trim(),
@@ -247,7 +254,7 @@ const Admin = () => {
       contactMethod: contactMethodMatch ? contactMethodMatch[1].trim() : null,
       responses,
       additional_categories_requested,
-      additional_vendors
+      additional_vendors,
     };
   };
 
