@@ -99,11 +99,50 @@ export function generateAdditionalCategoriesCSV(responses: SurveyResponse[]): st
   return [headers, ...rows].map((row) => row.map(escapeCSV).join(",")).join("\n");
 }
 
-function escapeCSV(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
+function decodeQuotedPrintable(input: string): string {
+  if (!input) return "";
+  // Remove soft line breaks
+  const cleaned = input.replace(/=\r?\n/g, "");
+  const bytes: number[] = [];
+  for (let i = 0; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (ch === "=" && i + 2 < cleaned.length) {
+      const hex = cleaned.slice(i + 1, i + 3);
+      if (/^[0-9A-Fa-f]{2}$/.test(hex)) {
+        bytes.push(parseInt(hex, 16));
+        i += 2;
+        continue;
+      }
+    }
+    // push ASCII codepoint
+    bytes.push(cleaned.charCodeAt(i));
   }
-  return value;
+  try {
+    return new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+  } catch {
+    // Fallback: naive replacement
+    return cleaned.replace(/=([0-9A-Fa-f]{2})/g, (_, h) =>
+      String.fromCharCode(parseInt(h, 16))
+    );
+  }
+}
+
+function escapeCSV(value: string): string {
+  let v = value ?? "";
+
+  // Decode common email quoted-printable artifacts (e.g., =E2=80=A2 → •)
+  v = decodeQuotedPrintable(v);
+
+  // Neutralize CSV formula injection so Excel/Sheets don't evaluate
+  if (/^\s*[=+\-@]/.test(v)) {
+    v = "'" + v;
+  }
+
+  // Standard CSV escaping
+  if (v.includes(",") || v.includes('"') || v.includes("\n")) {
+    return `"${v.replace(/"/g, '""')}"`;
+  }
+  return v;
 }
 
 export function downloadCSV(content: string, filename: string) {
