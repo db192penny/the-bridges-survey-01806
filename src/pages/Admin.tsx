@@ -50,6 +50,8 @@ function decodeQuotedPrintable(input: string): string {
 }
 
 const Admin = () => {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +59,14 @@ const Admin = () => {
   const [manualEntryData, setManualEntryData] = useState("");
 
   useEffect(() => {
+    const stored = sessionStorage.getItem("admin_auth");
+    if (stored === "true") {
+      setAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!authenticated) return;
     loadResponses();
     
     // Subscribe to real-time changes
@@ -74,7 +84,18 @@ const Admin = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [authenticated]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setAuthenticated(true);
+      sessionStorage.setItem("admin_auth", "true");
+      toast.success("Access granted!");
+    } else {
+      toast.error("Incorrect password");
+    }
+  };
 
   const loadResponses = async () => {
     const data = await getAllResponses();
@@ -453,6 +474,31 @@ const Admin = () => {
   const stats = calculateStats();
   const categoryStats = getCategoryStats();
   const additionalStats = getAdditionalCategoryStats();
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-6">
+          <h1 className="text-2xl font-bold mb-6 text-center">Admin Access</h1>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter admin password"
+              />
+            </div>
+            <Button type="submit" className="w-full">
+              Login
+            </Button>
+          </form>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
