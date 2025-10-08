@@ -138,6 +138,7 @@ const Survey = () => {
                 placeholder="John Smith"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
                 className="h-14 text-base mt-2"
               />
             </div>
@@ -175,6 +176,7 @@ const Survey = () => {
                 placeholder={contactMethod === "email" ? "john@example.com" : "(555) 123-4567"}
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
+                autoComplete={contactMethod === "email" ? "email" : "tel"}
                 className="h-14 text-base"
               />
             </div>
