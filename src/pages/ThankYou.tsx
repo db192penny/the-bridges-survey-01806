@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle, Copy } from "lucide-react";
@@ -9,11 +10,17 @@ const ThankYou = () => {
   const navigate = useNavigate();
   const responseCount = useResponseCount();
   const { clearDraft } = useSurveyState();
+  const [contactMethod, setContactMethod] = useState<"phone" | "email">("phone");
   
   // Get the most recent response to determine contact method
-  const responses = getAllResponses();
-  const lastResponse = responses[responses.length - 1];
-  const contactMethod = lastResponse?.contactMethod || "phone";
+  useEffect(() => {
+    const fetchContactMethod = async () => {
+      const responses = await getAllResponses();
+      const lastResponse = responses[responses.length - 1];
+      setContactMethod(lastResponse?.contactMethod || "phone");
+    };
+    fetchContactMethod();
+  }, []);
 
   const surveyUrl = window.location.origin;
 

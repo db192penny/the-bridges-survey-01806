@@ -14,6 +14,7 @@ import {
 import { getAllResponses } from "@/hooks/useSurveyState";
 import { generateMainCSV, generateAdditionalCategoriesCSV, downloadCSV } from "@/utils/csvExport";
 import { SurveyResponse, VENDOR_CATEGORIES } from "@/utils/surveyData";
+import { supabase } from "@/integrations/supabase/client";
 import { Download, Trash2, ChevronDown, ChevronRight, BarChart3, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
@@ -30,11 +31,28 @@ const Admin = () => {
   useEffect(() => {
     if (authenticated) {
       loadResponses();
+      
+      // Subscribe to real-time changes
+      const channel = supabase
+        .channel('survey_responses_admin')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'survey_responses' 
+        }, () => {
+          loadResponses();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [authenticated]);
 
-  const loadResponses = () => {
-    setResponses(getAllResponses());
+  const loadResponses = async () => {
+    const data = await getAllResponses();
+    setResponses(data);
   };
 
   const handleLogin = () => {
@@ -58,11 +76,19 @@ const Admin = () => {
     toast.success("Additional categories exported!");
   };
 
-  const handleDeleteResponse = (id: string, name: string) => {
+  const handleDeleteResponse = async (id: string, name: string) => {
     if (confirm(`Delete response from ${name || "this user"}?`)) {
-      const allResponses = getAllResponses();
-      const filtered = allResponses.filter(r => r.id !== id);
-      localStorage.setItem("vendor_survey_responses", JSON.stringify(filtered));
+      const { error } = await supabase
+        .from('survey_responses')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        toast.error("Failed to delete response");
+        return;
+      }
+
+      const filtered = responses.filter(r => r.id !== id);
       setResponses(filtered);
       toast.success("Response deleted!");
     }
@@ -88,7 +114,7 @@ const Admin = () => {
         }
 
         // Get existing responses
-        const existing = getAllResponses();
+        const existing = await getAllResponses();
         
         // Merge: Add new responses that don't already exist (by ID)
         const existingIds = new Set(existing.map(r => r.id));
@@ -99,12 +125,22 @@ const Admin = () => {
           return;
         }
 
-        // Save merged data
-        const merged = [...existing, ...newResponses];
-        localStorage.setItem("vendor_survey_responses", JSON.stringify(merged));
+        // Save merged data to Supabase
+        for (const response of newResponses) {
+          await supabase.from('survey_responses').insert({
+            timestamp: response.timestamp,
+            name: response.name,
+            contact: response.contact,
+            phone: response.phone,
+            contact_method: response.contactMethod,
+            responses: response.responses as any,
+            additional_categories_requested: response.additional_categories_requested,
+            additional_vendors: response.additional_vendors as any,
+          });
+        }
         
         // Refresh display
-        loadResponses();
+        await loadResponses();
         toast.success(`Imported ${newResponses.length} new response${newResponses.length === 1 ? '' : 's'}!`);
       } catch (error) {
         console.error("Import error:", error);

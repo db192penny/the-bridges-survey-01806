@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { SurveyResponse, CategoryResponse, VENDOR_CATEGORIES } from "@/utils/surveyData";
 import { sendSurveyNotification } from "@/utils/emailNotification";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "vendor_survey_responses";
 const DRAFT_KEY = "vendor_survey_draft";
@@ -70,9 +71,7 @@ export function useSurveyState() {
     }));
   };
 
-  const submitSurvey = () => {
-    const responses: SurveyResponse[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    
+  const submitSurvey = async () => {
     const newResponse: SurveyResponse = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
@@ -85,8 +84,28 @@ export function useSurveyState() {
       additional_vendors: draft.additional_vendors,
     };
 
-    responses.push(newResponse);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
+    // Save to Supabase database
+    const { error } = await supabase
+      .from('survey_responses')
+      .insert({
+        timestamp: newResponse.timestamp,
+        name: newResponse.name,
+        contact: newResponse.contact,
+        phone: newResponse.phone,
+        contact_method: newResponse.contactMethod,
+        responses: newResponse.responses as any,
+        additional_categories_requested: newResponse.additional_categories_requested,
+        additional_vendors: newResponse.additional_vendors as any,
+      });
+
+    if (error) {
+      console.error('Error saving survey response:', error);
+      // Fallback to localStorage on error
+      const responses: SurveyResponse[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      responses.push(newResponse);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
+    }
+
     localStorage.removeItem(DRAFT_KEY);
     
     // Send email notification (non-blocking)
@@ -120,25 +139,62 @@ export function useResponseCount(): number {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const updateCount = () => {
-      const responses: SurveyResponse[] = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]"
-      );
-      setCount(responses.length);
+    const fetchCount = async () => {
+      const { count: dbCount, error } = await supabase
+        .from('survey_responses')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!error && dbCount !== null) {
+        setCount(dbCount);
+      }
     };
 
-    updateCount();
-    window.addEventListener("storage", updateCount);
-    return () => window.removeEventListener("storage", updateCount);
+    fetchCount();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('survey_responses_count')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'survey_responses' 
+      }, () => {
+        fetchCount();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return count;
 }
 
-export function getAllResponses(): SurveyResponse[] {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+export async function getAllResponses(): Promise<SurveyResponse[]> {
+  const { data, error } = await supabase
+    .from('survey_responses')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching responses:', error);
+    return [];
+  }
+
+  return (data || []).map(row => ({
+    id: row.id,
+    timestamp: row.timestamp,
+    name: row.name,
+    phone: row.phone || row.contact || '',
+    contact: row.contact || '',
+    contactMethod: (row.contact_method as "email" | "phone") || "phone",
+    responses: (row.responses as any) || {},
+    additional_categories_requested: row.additional_categories_requested || [],
+    additional_vendors: (row.additional_vendors as any) || {},
+  }));
 }
 
-export function clearAllResponses() {
-  localStorage.removeItem(STORAGE_KEY);
+export async function clearAllResponses() {
+  await supabase.from('survey_responses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 }
