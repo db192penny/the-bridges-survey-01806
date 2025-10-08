@@ -179,6 +179,9 @@ const Admin = () => {
     
     // Extract vendors by category
     const responses: Record<string, any> = {};
+    const additional_vendors: Record<string, string[]> = {};
+    const additional_categories_requested: string[] = [];
+    
     const categoryMapping: Record<string, string> = {
       "Pool Service": "pool_service",
       "HVAC / Air Conditioning": "hvac",
@@ -189,22 +192,48 @@ const Admin = () => {
       "Handyman": "handyman"
     };
     
-    // Find vendor list section
-    const vendorSection = body.match(/Selected Service Providers:[\s\S]+/);
-    if (vendorSection) {
-      const vendorText = vendorSection[0];
+    // Find vendor list section - more flexible matching
+    const vendorSectionMatch = body.match(/Selected Service Providers:\s*=+\s*([\s\S]*?)(?=View full response|$)/);
+    
+    if (vendorSectionMatch) {
+      const vendorText = vendorSectionMatch[1];
       
-      // Parse each category and its vendors
-      Object.entries(categoryMapping).forEach(([displayName, categoryKey]) => {
-        const categoryRegex = new RegExp(`${displayName}:\\s*\\n([\\s\\S]*?)(?=\\n\\n|\\n[A-Z]|$)`, 'i');
-        const categoryMatch = vendorText.match(categoryRegex);
+      // Split by double newlines to get category blocks
+      const sections = vendorText.split(/\n\s*\n/);
+      
+      sections.forEach(section => {
+        const lines = section.trim().split('\n');
+        if (lines.length === 0) return;
         
-        if (categoryMatch) {
-          const vendorLines = categoryMatch[1].match(/•\s*(.+)/g);
-          if (vendorLines) {
-            const vendors = vendorLines.map(line => line.replace(/•\s*/, '').trim());
-            if (vendors.length > 0) {
-              responses[categoryKey] = { vendors, skipped: false };
+        // First line is category name
+        const categoryLine = lines[0].trim();
+        if (!categoryLine || categoryLine.includes('===')) return;
+        
+        const categoryName = categoryLine.replace(/:$/, '').trim();
+        
+        // Check if it's a known category
+        const categoryKey = categoryMapping[categoryName];
+        
+        // Extract vendors (lines starting with •)
+        const vendors = lines
+          .slice(1)
+          .filter(line => line.trim().startsWith('•'))
+          .map(line => line.replace(/^\s*•\s*/, '').trim())
+          .filter(Boolean);
+        
+        if (vendors.length > 0) {
+          if (categoryKey) {
+            // Known category - add to responses
+            responses[categoryKey] = { 
+              vendors, 
+              skipped: false 
+            };
+          } else {
+            // Additional/custom category
+            const customKey = categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+            additional_vendors[customKey] = vendors;
+            if (!additional_categories_requested.includes(categoryName)) {
+              additional_categories_requested.push(categoryName);
             }
           }
         }
@@ -217,8 +246,8 @@ const Admin = () => {
       contact: contactMatch ? contactMatch[1].trim() : null,
       contactMethod: contactMethodMatch ? contactMethodMatch[1].trim() : null,
       responses,
-      additional_categories_requested: [],
-      additional_vendors: {}
+      additional_categories_requested,
+      additional_vendors
     };
   };
 
