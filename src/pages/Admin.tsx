@@ -24,6 +24,31 @@ import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 
 const ADMIN_PASSWORD = "courtney2025";
 
+function decodeQuotedPrintable(input: string): string {
+  if (!input) return "";
+  const cleaned = input.replace(/=\r?\n/g, "");
+  const bytes: number[] = [];
+  for (let i = 0; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (ch === "=" && i + 2 < cleaned.length) {
+      const hex = cleaned.slice(i + 1, i + 3);
+      if (/^[0-9A-Fa-f]{2}$/.test(hex)) {
+        bytes.push(parseInt(hex, 16));
+        i += 2;
+        continue;
+      }
+    }
+    bytes.push(cleaned.charCodeAt(i));
+  }
+  try {
+    return new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+  } catch {
+    return cleaned.replace(/=([0-9A-Fa-f]{2})/g, (_: string, h: string) =>
+      String.fromCharCode(parseInt(h, 16))
+    );
+  }
+}
+
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
@@ -157,9 +182,10 @@ const Admin = () => {
   };
 
   const parseEmailContent = (emailText: string) => {
+    const decodedEmail = decodeQuotedPrintable(emailText);
     // Prefer starting from the known email body title if present
-    const bodyStartIdx = emailText.indexOf("New Service Provider Survey Response");
-    const bodyRaw = bodyStartIdx >= 0 ? emailText.slice(bodyStartIdx) : emailText;
+    const bodyStartIdx = decodedEmail.indexOf("New Service Provider Survey Response");
+    const bodyRaw = bodyStartIdx >= 0 ? decodedEmail.slice(bodyStartIdx) : decodedEmail;
     
     // Fallback: slice after the first blank line (headers end)
     const doubleNewlineIdx = bodyRaw.indexOf("\n\n");
@@ -611,7 +637,7 @@ const Admin = () => {
                                     <strong>{category?.title}:</strong>{" "}
                                     {catData.skipped
                                       ? `Skipped (${catData.skip_reason?.replace("_", " ")})`
-                                      : catData.vendors.join(", ") || "No selection"}
+                                      : catData.vendors.map(decodeQuotedPrintable).join(", ") || "No selection"}
                                   </div>
                                 );
                               })}
@@ -628,7 +654,7 @@ const Admin = () => {
                                     .map((categoryName) => {
                                       const categoryKey = categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
                                       const vendors = response.additional_vendors[categoryKey] || [];
-                                      const vendorNames = vendors.filter(Boolean).join(", ");
+                                      const vendorNames = vendors.filter(Boolean).map(decodeQuotedPrintable).join(", ");
                                       return vendorNames ? `${categoryName}: ${vendorNames}` : null;
                                     })
                                     .filter(Boolean)
