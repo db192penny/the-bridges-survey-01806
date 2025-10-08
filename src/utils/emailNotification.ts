@@ -4,8 +4,11 @@ export async function sendSurveyNotification(responseData: any) {
   try {
     console.log('Sending survey notification via edge function...');
     
+    // Pass the correct admin URL from the frontend
+    const adminUrl = `${window.location.origin}/admin`;
+    
     const { data, error } = await supabase.functions.invoke('send-survey-notification', {
-      body: { responseData },
+      body: { responseData, adminUrl },
     });
 
     if (error) {

@@ -18,6 +18,7 @@ interface SurveyNotificationRequest {
     additional_categories_requested?: string[];
     additional_vendors?: Record<string, string[]>;
   };
+  adminUrl?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -27,7 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { responseData }: SurveyNotificationRequest = await req.json();
+    const { responseData, adminUrl }: SurveyNotificationRequest = await req.json();
 
     console.log("Processing survey notification for:", responseData.name);
 
@@ -88,8 +89,8 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const siteUrl = Deno.env.get("SUPABASE_URL")?.replace(/\.supabase\.co$/, ".lovable.app") || "your-site";
-    const adminUrl = `${siteUrl}/admin`;
+    // Use the admin URL passed from frontend
+    const finalAdminUrl = adminUrl || "Check your admin panel for full details";
 
     const emailBody = `
 New Service Provider Survey Response
@@ -105,7 +106,7 @@ Summary:
 - Requested ${responseData.additional_categories_requested?.length || 0} additional categories
 ${vendorList}
 View full response in admin panel:
-${adminUrl}
+${finalAdminUrl}
     `.trim();
 
     // Send email using Resend API
