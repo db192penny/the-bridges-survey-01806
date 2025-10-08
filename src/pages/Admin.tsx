@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -15,7 +18,7 @@ import { getAllResponses } from "@/hooks/useSurveyState";
 import { generateMainCSV, generateAdditionalCategoriesCSV, downloadCSV } from "@/utils/csvExport";
 import { SurveyResponse, VENDOR_CATEGORIES } from "@/utils/surveyData";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Trash2, ChevronDown, ChevronRight, BarChart3, Upload } from "lucide-react";
+import { Download, Trash2, ChevronDown, ChevronRight, BarChart3, Upload, PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 
@@ -27,6 +30,8 @@ const Admin = () => {
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualEntryData, setManualEntryData] = useState("");
 
   useEffect(() => {
     if (authenticated) {
@@ -149,6 +154,44 @@ const Admin = () => {
     };
 
     input.click();
+  };
+
+  const handleManualEntry = async () => {
+    try {
+      const parsed = JSON.parse(manualEntryData);
+      
+      // Validate required fields
+      if (!parsed.name || !parsed.timestamp) {
+        toast.error("Name and timestamp are required");
+        return;
+      }
+
+      // Insert to database
+      const { error } = await supabase.from('survey_responses').insert({
+        timestamp: parsed.timestamp,
+        name: parsed.name,
+        contact: parsed.contact || parsed.email || '',
+        phone: parsed.phone || parsed.contact || '',
+        contact_method: parsed.contactMethod || parsed.contact_method || 'email',
+        responses: parsed.responses || {},
+        additional_categories_requested: parsed.additional_categories_requested || [],
+        additional_vendors: parsed.additional_vendors || {},
+      });
+
+      if (error) {
+        console.error('Error adding manual entry:', error);
+        toast.error("Failed to add entry");
+        return;
+      }
+
+      await loadResponses();
+      setManualEntryData("");
+      setShowManualEntry(false);
+      toast.success("Entry added successfully!");
+    } catch (error) {
+      console.error("Manual entry error:", error);
+      toast.error("Invalid JSON format");
+    }
   };
 
   const filteredResponses = responses.filter(
@@ -300,6 +343,54 @@ const Admin = () => {
               <Upload className="w-4 h-4" />
               Import Backup
             </Button>
+            <Dialog open={showManualEntry} onOpenChange={setShowManualEntry}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <PlusCircle className="w-4 h-4" />
+                  Add Manual Entry
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add Response from Email</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Paste JSON data from email</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Format the email data as JSON with: name, timestamp, contact, contactMethod, responses, etc.
+                    </p>
+                    <Textarea
+                      value={manualEntryData}
+                      onChange={(e) => setManualEntryData(e.target.value)}
+                      placeholder={`{
+  "name": "John Doe",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "contact": "john@email.com",
+  "contactMethod": "email",
+  "responses": {
+    "pool_service": {
+      "vendors": ["ABC Pools"],
+      "skipped": false
+    }
+  },
+  "additional_categories_requested": [],
+  "additional_vendors": {}
+}`}
+                      className="font-mono text-xs min-h-[400px]"
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" onClick={() => setShowManualEntry(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleManualEntry}>
+                      Add Entry
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
