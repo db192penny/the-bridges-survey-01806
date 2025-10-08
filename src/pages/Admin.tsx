@@ -156,9 +156,83 @@ const Admin = () => {
     input.click();
   };
 
+  const parseEmailContent = (emailText: string) => {
+    // Find where the email body starts (after headers)
+    const bodyMatch = emailText.match(/\n\n([\s\S]+)/);
+    if (!bodyMatch) throw new Error("Could not find email body");
+    
+    const body = bodyMatch[1];
+    
+    // Extract fields
+    const nameMatch = body.match(/Name:\s*(.+)/);
+    const contactMatch = body.match(/Contact:\s*(.+)/);
+    const contactMethodMatch = body.match(/Contact Method:\s*(.+)/);
+    const timestampMatch = body.match(/Submitted:\s*(.+)/);
+    
+    if (!nameMatch || !timestampMatch) {
+      throw new Error("Required fields (Name, Timestamp) not found in email");
+    }
+    
+    // Parse timestamp to ISO format
+    const submittedDate = new Date(timestampMatch[1]);
+    const timestamp = submittedDate.toISOString();
+    
+    // Extract vendors by category
+    const responses: Record<string, any> = {};
+    const categoryMapping: Record<string, string> = {
+      "Pool Service": "pool_service",
+      "HVAC / Air Conditioning": "hvac",
+      "Landscaping / Lawn Care": "landscaping",
+      "Pest Control": "pest_control",
+      "Electrician": "electrician",
+      "Plumber": "plumber",
+      "Handyman": "handyman"
+    };
+    
+    // Find vendor list section
+    const vendorSection = body.match(/Selected Service Providers:[\s\S]+/);
+    if (vendorSection) {
+      const vendorText = vendorSection[0];
+      
+      // Parse each category and its vendors
+      Object.entries(categoryMapping).forEach(([displayName, categoryKey]) => {
+        const categoryRegex = new RegExp(`${displayName}:\\s*\\n([\\s\\S]*?)(?=\\n\\n|\\n[A-Z]|$)`, 'i');
+        const categoryMatch = vendorText.match(categoryRegex);
+        
+        if (categoryMatch) {
+          const vendorLines = categoryMatch[1].match(/•\s*(.+)/g);
+          if (vendorLines) {
+            const vendors = vendorLines.map(line => line.replace(/•\s*/, '').trim());
+            if (vendors.length > 0) {
+              responses[categoryKey] = { vendors, skipped: false };
+            }
+          }
+        }
+      });
+    }
+    
+    return {
+      timestamp,
+      name: nameMatch[1].trim(),
+      contact: contactMatch ? contactMatch[1].trim() : null,
+      contactMethod: contactMethodMatch ? contactMethodMatch[1].trim() : null,
+      responses,
+      additional_categories_requested: [],
+      additional_vendors: {}
+    };
+  };
+
   const handleManualEntry = async () => {
     try {
-      const parsed = JSON.parse(manualEntryData);
+      let parsed;
+      
+      // Try to parse as raw email first
+      if (manualEntryData.includes("From:") || manualEntryData.includes("Submitted:")) {
+        parsed = parseEmailContent(manualEntryData);
+      } else {
+        // Fall back to JSON parsing
+        parsed = JSON.parse(manualEntryData);
+      }
       
       // Validate required fields
       if (!parsed.name || !parsed.timestamp) {
@@ -190,7 +264,7 @@ const Admin = () => {
       toast.success("Entry added successfully!");
     } catch (error) {
       console.error("Manual entry error:", error);
-      toast.error("Invalid JSON format");
+      toast.error("Invalid email or JSON format");
     }
   };
 
@@ -356,27 +430,14 @@ const Admin = () => {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label>Paste JSON data from email</Label>
+                    <Label>Paste Raw Email Content</Label>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Format the email data as JSON with: name, timestamp, contact, contactMethod, responses, etc.
+                      Simply paste the entire email (including headers) and it will be automatically parsed.
                     </p>
                     <Textarea
                       value={manualEntryData}
                       onChange={(e) => setManualEntryData(e.target.value)}
-                      placeholder={`{
-  "name": "John Doe",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "contact": "john@email.com",
-  "contactMethod": "email",
-  "responses": {
-    "pool_service": {
-      "vendors": ["ABC Pools"],
-      "skipped": false
-    }
-  },
-  "additional_categories_requested": [],
-  "additional_vendors": {}
-}`}
+                      placeholder="Paste the complete email here, including headers..."
                       className="font-mono text-xs min-h-[400px]"
                     />
                   </div>
