@@ -85,6 +85,7 @@ export function useSurveyState() {
     };
 
     // Save to Supabase database
+    console.log('Submitting survey to database:', newResponse);
     const { error } = await supabase
       .from('survey_responses')
       .insert({
@@ -99,11 +100,13 @@ export function useSurveyState() {
       });
 
     if (error) {
-      console.error('Error saving survey response:', error);
+      console.error('Error saving survey response to database:', error);
       // Fallback to localStorage on error
       const responses: SurveyResponse[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       responses.push(newResponse);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
+    } else {
+      console.log('Survey saved successfully to database!');
     }
 
     localStorage.removeItem(DRAFT_KEY);
