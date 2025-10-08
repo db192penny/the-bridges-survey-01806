@@ -169,7 +169,9 @@ const Admin = () => {
   };
 
   const parseEmailContent = (emailText: string) => {
-    const decodedEmail = decodeQuotedPrintable(emailText);
+    // Decode quoted-printable and normalize newlines
+    const decodedEmail = decodeQuotedPrintable(emailText).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
     // Prefer starting from the known email body title if present
     const bodyStartIdx = decodedEmail.indexOf("New Service Provider Survey Response");
     const bodyRaw = bodyStartIdx >= 0 ? decodedEmail.slice(bodyStartIdx) : decodedEmail;
@@ -207,57 +209,84 @@ const Admin = () => {
       "Handyman": "handyman",
     };
 
-    // Extract vendor section (between Selected... and View full response/end)
-    const vendorSectionMatch = body.match(/Selected Service Providers:[\s\S]*?(?=^View full response|\Z)/gmi);
+    // Extract vendor section: everything after the title until "View full response" (or end)
+    let vendorSection = "";
+    const vendorStart = body.search(/Selected Service Providers:/i);
+    if (vendorStart !== -1) {
+      const afterTitle = body.slice(vendorStart).split(/\n/);
+      // Drop the title line
+      vendorSection = afterTitle.slice(1).join("\n");
+      // Cut before the view link if present
+      const stopIdx = vendorSection.search(/^\s*View full response.*$/mi);
+      if (stopIdx !== -1) {
+        vendorSection = vendorSection.slice(0, stopIdx);
+      }
+    }
 
-    if (vendorSectionMatch) {
-      const vendorText = vendorSectionMatch[0]
-        .replace(/Selected Service Providers:[\s\S]*?=+\s*/i, "") // remove title + divider
-        .trim();
+    // Nothing to parse if no section found
+    if (!vendorSection.trim()) {
+      return {
+        timestamp,
+        name: nameMatch[1].trim(),
+        contact: contactMatch ? contactMatch[1].trim() : null,
+        contactMethod: contactMethodMatch ? contactMethodMatch[1].trim() : null,
+        responses,
+        additional_categories_requested,
+        additional_vendors,
+      };
+    }
 
-      const lines = vendorText.split(/\r?\n/);
-      let i = 0;
-      while (i < lines.length) {
-        const line = (lines[i] || "").trim();
-        // Skip empties and divider lines
-        if (!line || /^=+$/.test(line)) { i++; continue; }
+    // Prepare lines: drop decorative dividers made of '=' and trim right spaces
+    const lines = vendorSection
+      .split(/\n/)
+      .map((ln) => ln.replace(/\s+$/g, ""));
 
-        // Category lines end with ":"
-        if (/:$/.test(line)) {
-          const categoryName = line.replace(/:$/, "").trim();
-          const isKnown = categoryMapping.hasOwnProperty(categoryName);
-          const categoryKey = isKnown ? categoryMapping[categoryName] : categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+    let i = 0;
+    while (i < lines.length) {
+      const line = (lines[i] || "").trim();
+      // Skip empties and divider lines
+      if (!line || /^=+$/.test(line)) { i++; continue; }
 
-          // Collect vendor lines until blank line or next category
-          const vendors: string[] = [];
+      // Category lines end with ":"
+      if (/:$/.test(line)) {
+        const categoryName = line.replace(/:$/, "").trim();
+        const isKnown = Object.prototype.hasOwnProperty.call(categoryMapping, categoryName);
+        const categoryKey = isKnown
+          ? categoryMapping[categoryName]
+          : categoryName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+        const vendors: string[] = [];
+        i++;
+        while (i < lines.length) {
+          const raw = (lines[i] || "").trim();
+          if (!raw) break; // blank line ends block
+          if (/:$/.test(raw)) break; // next category encountered
+          if (/^=+$/.test(raw)) { i++; continue; } // skip dividers
+
+          // Accept bullets (•, -, *) or stray encoded bullet forms
+          const cleaned = raw
+            .replace(/^=E2=80=A2\s*/i, "") // encoded bullet edge-case
+            .replace(/^([•\-\*\u2022\u2023\u25E6\u2043\u2219])\s*/, "")
+            .trim();
+
+          if (cleaned) vendors.push(cleaned);
           i++;
-          while (i < lines.length) {
-            const l = (lines[i] || "").trim();
-            if (!l) break; // blank line ends block
-            if (/:$/.test(l)) break; // next category encountered
-            if (/^=+$/.test(l)) { i++; continue; } // skip dividers
-
-            // Accept bullets (•, -, *) or plain lines
-            const cleaned = l.replace(/^([•\-*])\s*/, "").trim();
-            if (cleaned) vendors.push(cleaned);
-            i++;
-          }
-
-          if (vendors.length > 0) {
-            if (isKnown) {
-              responses[categoryKey] = { vendors, skipped: false };
-            } else {
-              additional_vendors[categoryKey] = vendors;
-              if (!additional_categories_requested.includes(categoryName)) {
-                additional_categories_requested.push(categoryName);
-              }
-            }
-            continue; // continue outer while without extra i++
-          }
         }
 
-        i++;
+        if (vendors.length > 0) {
+          if (isKnown) {
+            responses[categoryKey] = { vendors, skipped: false };
+          } else {
+            additional_vendors[categoryKey] = vendors;
+            if (!additional_categories_requested.includes(categoryName)) {
+              additional_categories_requested.push(categoryName);
+            }
+          }
+          continue; // continue outer while without extra i++
+        }
       }
+
+      i++;
     }
 
     return {
