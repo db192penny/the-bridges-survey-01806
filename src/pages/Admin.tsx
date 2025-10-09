@@ -710,7 +710,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <AnalyticsDashboard />
+            <AnalyticsDashboard responses={responses} />
           </TabsContent>
 
           <TabsContent value="insights">

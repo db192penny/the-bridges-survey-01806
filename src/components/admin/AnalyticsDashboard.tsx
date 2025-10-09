@@ -3,8 +3,24 @@ import { calculateAnalytics } from "@/utils/surveyAnalytics";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Users, UserX, Clock, Mail, Phone } from "lucide-react";
 
-export function AnalyticsDashboard() {
+interface AnalyticsDashboardProps {
+  responses?: any[];
+}
+
+export function AnalyticsDashboard({ responses = [] }: AnalyticsDashboardProps) {
   const analytics = calculateAnalytics();
+
+  // Calculate contact method stats from actual database responses
+  const emailCount = responses.filter((r: any) => r.contact_method === 'email').length;
+  const phoneCount = responses.filter((r: any) => r.contact_method === 'phone').length;
+  const totalContacts = emailCount + phoneCount;
+
+  const contactMethods = {
+    email: emailCount,
+    phone: phoneCount,
+    emailPercentage: totalContacts > 0 ? (emailCount / totalContacts) * 100 : 0,
+    phonePercentage: totalContacts > 0 ? (phoneCount / totalContacts) * 100 : 0,
+  };
 
   return (
     <div className="space-y-6">
@@ -180,10 +196,10 @@ export function AnalyticsDashboard() {
                   <span className="text-sm font-medium">Email</span>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {analytics.contactMethods.email} ({analytics.contactMethods.emailPercentage.toFixed(1)}%)
+                  {contactMethods.email} ({contactMethods.emailPercentage.toFixed(1)}%)
                 </span>
               </div>
-              <Progress value={analytics.contactMethods.emailPercentage} />
+              <Progress value={contactMethods.emailPercentage} />
             </div>
             
             <div>
@@ -193,10 +209,10 @@ export function AnalyticsDashboard() {
                   <span className="text-sm font-medium">Phone</span>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {analytics.contactMethods.phone} ({analytics.contactMethods.phonePercentage.toFixed(1)}%)
+                  {contactMethods.phone} ({contactMethods.phonePercentage.toFixed(1)}%)
                 </span>
               </div>
-              <Progress value={analytics.contactMethods.phonePercentage} />
+              <Progress value={contactMethods.phonePercentage} />
             </div>
           </CardContent>
         </Card>
