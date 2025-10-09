@@ -17,6 +17,12 @@ export interface AnalyticsData {
   dropoffByCategory: Record<string, number>;
   averageTimeToComplete: number;
   sessions: SurveySession[];
+  contactMethods: {
+    email: number;
+    phone: number;
+    emailPercentage: number;
+    phonePercentage: number;
+  };
 }
 
 const ANALYTICS_KEY = 'survey_analytics';
@@ -134,6 +140,14 @@ export function calculateAnalytics(): AnalyticsData {
       }, 0) / completedSessions.length / 60000 // Convert to minutes
     : 0;
 
+  // Calculate contact method stats from localStorage responses
+  const responsesStr = localStorage.getItem('survey_responses');
+  const responses = responsesStr ? JSON.parse(responsesStr) : [];
+  
+  const emailCount = responses.filter((r: any) => r.contactMethod === 'email').length;
+  const phoneCount = responses.filter((r: any) => r.contactMethod === 'phone').length;
+  const totalContacts = emailCount + phoneCount;
+
   return {
     totalStarts,
     totalCompletions,
@@ -142,6 +156,12 @@ export function calculateAnalytics(): AnalyticsData {
     dropoffByCategory,
     averageTimeToComplete,
     sessions,
+    contactMethods: {
+      email: emailCount,
+      phone: phoneCount,
+      emailPercentage: totalContacts > 0 ? (emailCount / totalContacts) * 100 : 0,
+      phonePercentage: totalContacts > 0 ? (phoneCount / totalContacts) * 100 : 0,
+    },
   };
 }
 

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { calculateAnalytics } from "@/utils/surveyAnalytics";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, Users, UserX, Clock } from "lucide-react";
+import { TrendingUp, Users, UserX, Clock, Mail, Phone } from "lucide-react";
 
 export function AnalyticsDashboard() {
   const analytics = calculateAnalytics();
@@ -148,23 +148,59 @@ export function AnalyticsDashboard() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Average Completion Time
-          </CardTitle>
-          <CardDescription>Time taken from start to completion</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">
-            {analytics.averageTimeToComplete.toFixed(1)} minutes
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Based on {analytics.totalCompletions} completed surveys
-          </p>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Average Completion Time
+            </CardTitle>
+            <CardDescription>Time taken from start to completion</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {analytics.averageTimeToComplete.toFixed(1)} minutes
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              Based on {analytics.totalCompletions} completed surveys
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact Methods</CardTitle>
+            <CardDescription>Preferred contact method distribution</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Email</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {analytics.contactMethods.email} ({analytics.contactMethods.emailPercentage.toFixed(1)}%)
+                </span>
+              </div>
+              <Progress value={analytics.contactMethods.emailPercentage} />
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Phone</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {analytics.contactMethods.phone} ({analytics.contactMethods.phonePercentage.toFixed(1)}%)
+                </span>
+              </div>
+              <Progress value={analytics.contactMethods.phonePercentage} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
