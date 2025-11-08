@@ -14,45 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      survey_responses: {
-        Row: {
-          additional_categories_requested: string[] | null
-          additional_vendors: Json | null
-          contact: string | null
-          contact_method: string | null
-          created_at: string | null
-          id: string
-          name: string
-          phone: string | null
-          responses: Json | null
-          timestamp: string
-        }
-        Insert: {
-          additional_categories_requested?: string[] | null
-          additional_vendors?: Json | null
-          contact?: string | null
-          contact_method?: string | null
-          created_at?: string | null
-          id?: string
-          name: string
-          phone?: string | null
-          responses?: Json | null
-          timestamp: string
-        }
-        Update: {
-          additional_categories_requested?: string[] | null
-          additional_vendors?: Json | null
-          contact?: string | null
-          contact_method?: string | null
-          created_at?: string | null
-          id?: string
-          name?: string
-          phone?: string | null
-          responses?: Json | null
-          timestamp?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never

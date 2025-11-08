@@ -1,3 +1,5 @@
+
+-- Migration: 20251008051533
 -- Create the survey_responses table
 CREATE TABLE public.survey_responses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -31,3 +33,10 @@ USING (true);
 
 -- Create index for faster queries on created_at
 CREATE INDEX idx_survey_responses_created_at ON public.survey_responses(created_at DESC);
+
+-- Migration: 20251008054815
+-- Add DELETE policy to allow deleting survey responses
+CREATE POLICY "Allow public deletes" 
+ON survey_responses 
+FOR DELETE 
+USING (true);
